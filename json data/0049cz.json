@@ -22,7 +22,8 @@
   "files": {
     "csv": "0049cz.csv",
     "json": "0049cz.json",
-    "npy": "0049cz.npy"
+    "npy": "0049cz.npy",
+    "png": "png charts/0049cz.png"
   },
   "tags": [
     "2_sets",
@@ -59,7 +60,23 @@
     "starting_bucket_40_49",
     "starting_price_0049",
     "straight_sets",
-    "third_set_unknown"
+    "third_set_unknown",
+    "price_move_down",
+    "negative_price_move",
+    "price_move_down_10",
+    "move_down_10",
+    "minus_10_down",
+    "price_move_down_20",
+    "move_down_20",
+    "minus_20_down",
+    "price_move_down_30",
+    "move_down_30",
+    "minus_30_down",
+    "price_move_down_40",
+    "move_down_40",
+    "minus_40_down",
+    "price_contraction",
+    "favorite_down_underdog_up"
   ],
   "volatility_score": 0.7514,
   "max_single_move": 9.61,
@@ -68,5 +85,16 @@
   "crossings_25": 3,
   "crossings_50": 5,
   "crossings_75": 0,
-  "first_cross_50_pct": 59.93
+  "first_cross_50_pct": 59.93,
+  "price_move": -48.0,
+  "abs_price_move": 48.0,
+  "favorite_starting_price": 49.0,
+  "favorite_ending_price": 1.0,
+  "underdog_starting_price": 53.0,
+  "underdog_ending_price": 99.0,
+  "favorite_price_move": -48.0,
+  "underdog_price_move": 46.0,
+  "price_expansion": false,
+  "price_contraction": true,
+  "png_file": "png charts/0049cz.png"
 }

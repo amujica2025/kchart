@@ -1280,6 +1280,388 @@
     openBestPng = patchedOpenBestPng;
 
 
+
+    /*
+      KCHART ADVANCED FILTER PATCH V4
+
+      Adds:
+      - unlimited field-vs-field comparison filters
+      - price move magnitude tags
+      - price expansion / contraction tags
+      - hides old minutes-based movement filter
+    */
+
+    const KCV_COMPARE_FIELDS = [
+      ["starting_price", "Starting price"],
+      ["ending_price", "Ending price"],
+      ["price_move", "Price move"],
+      ["abs_price_move", "Absolute price move"],
+      ["favorite_starting_price", "Favorite start"],
+      ["favorite_ending_price", "Favorite end"],
+      ["favorite_price_move", "Favorite move"],
+      ["underdog_starting_price", "Underdog start"],
+      ["underdog_ending_price", "Underdog end"],
+      ["underdog_price_move", "Underdog move"],
+      ["volatility_score", "Volatility"],
+      ["range_points", "Range"],
+      ["direction_flips", "Direction flips"],
+      ["max_single_move", "Max single move"],
+      ["row_count", "Rows"],
+      ["price_expansion", "Price expansion"],
+      ["price_contraction", "Price contraction"]
+    ];
+
+    const KCV_COMPARE_CONSTANTS = [
+      -100, -90, -80, -70, -60, -50, -40, -30, -20, -10,
+      -5, -1, 0, 1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100
+    ];
+
+    const KCV_COMPARE_OPERATORS = [
+      ["<", "<"],
+      ["<=", "<="],
+      ["=", "="],
+      [">=", ">="],
+      [">", ">"],
+      ["!=", "!="],
+      ["-", "-  field1 minus field2 > 0"],
+      ["+", "+  field1 plus field2 > 0"]
+    ];
+
+    let kcvCompareFilters = [];
+
+    const kcvOriginalAllRecordTags = allRecordTags;
+
+    allRecordTags = function(record) {
+      return [...new Set([
+        ...kcvOriginalAllRecordTags(record),
+        ...kcvDerivedMoveTags(record)
+      ])];
+    };
+
+    function kcvNum(value) {
+      const x = Number(value);
+      return Number.isFinite(x) ? x : 0;
+    }
+
+    function kcvPriceFields(record) {
+      const start = kcvNum(record.starting_price);
+      const end = kcvNum(record.ending_price);
+
+      const oppStart = kcvNum(
+        record.opponent_starting_price ??
+        record.opponent_start ??
+        (100 - start)
+      );
+
+      const oppEnd = kcvNum(
+        record.opponent_ending_price ??
+        record.opponent_end ??
+        (100 - end)
+      );
+
+      const side = String(record.player_side || "").toLowerCase();
+
+      let playerIsFavorite = false;
+
+      if (side.includes("fav")) {
+        playerIsFavorite = true;
+      } else if (side.includes("dog") || side.includes("under")) {
+        playerIsFavorite = false;
+      } else {
+        playerIsFavorite = start >= oppStart;
+      }
+
+      const favoriteStart = playerIsFavorite ? start : oppStart;
+      const favoriteEnd = playerIsFavorite ? end : oppEnd;
+      const underdogStart = playerIsFavorite ? oppStart : start;
+      const underdogEnd = playerIsFavorite ? oppEnd : end;
+
+      const priceMove = end - start;
+      const favoriteMove = favoriteEnd - favoriteStart;
+      const underdogMove = underdogEnd - underdogStart;
+
+      return {
+        starting_price: start,
+        ending_price: end,
+        price_move: priceMove,
+        abs_price_move: Math.abs(priceMove),
+        favorite_starting_price: favoriteStart,
+        favorite_ending_price: favoriteEnd,
+        favorite_price_move: favoriteMove,
+        underdog_starting_price: underdogStart,
+        underdog_ending_price: underdogEnd,
+        underdog_price_move: underdogMove,
+        price_expansion: favoriteMove > 0 && underdogMove < 0 ? 1 : 0,
+        price_contraction: favoriteMove < 0 && underdogMove > 0 ? 1 : 0
+      };
+    }
+
+    function kcvFieldValue(record, key) {
+      const fields = kcvPriceFields(record);
+
+      if (fields[key] != null) {
+        return fields[key];
+      }
+
+      const m = metric(record, key);
+
+      if (m !== "" && m != null) {
+        return kcvNum(m);
+      }
+
+      return kcvNum(record[key]);
+    }
+
+    function kcvDerivedMoveTags(record) {
+      const fields = kcvPriceFields(record);
+      const tags = [];
+      const move = fields.price_move;
+
+      if (move > 0) {
+        tags.push("price_move_up");
+        tags.push("positive_price_move");
+
+        [10, 20, 30, 40, 50, 60].forEach((threshold) => {
+          if (move >= threshold) {
+            tags.push("price_move_up_" + threshold);
+            tags.push("move_up_" + threshold);
+            tags.push("plus_" + threshold + "_up");
+          }
+        });
+      }
+
+      if (move < 0) {
+        tags.push("price_move_down");
+        tags.push("negative_price_move");
+
+        [10, 20, 30, 40, 50, 60].forEach((threshold) => {
+          if (move <= -threshold) {
+            tags.push("price_move_down_" + threshold);
+            tags.push("move_down_" + threshold);
+            tags.push("minus_" + threshold + "_down");
+          }
+        });
+      }
+
+      if (fields.price_expansion) {
+        tags.push("price_expansion");
+        tags.push("favorite_up_underdog_down");
+      }
+
+      if (fields.price_contraction) {
+        tags.push("price_contraction");
+        tags.push("favorite_down_underdog_up");
+      }
+
+      return tags;
+    }
+
+    function kcvFieldOptions(selected) {
+      return KCV_COMPARE_FIELDS.map(([key, label]) => {
+        return `<option value="${key}" ${selected === key ? "selected" : ""}>${label}</option>`;
+      }).join("");
+    }
+
+    function kcvOperatorOptions(selected) {
+      return KCV_COMPARE_OPERATORS.map(([key, label]) => {
+        return `<option value="${key}" ${selected === key ? "selected" : ""}>${label}</option>`;
+      }).join("");
+    }
+
+    function kcvRightOptions(selected) {
+      const fields = KCV_COMPARE_FIELDS.map(([key, label]) => {
+        return `<option value="${key}" ${selected === key ? "selected" : ""}>${label}</option>`;
+      }).join("");
+
+      const constants = KCV_COMPARE_CONSTANTS.map((value) => {
+        const key = "const:" + value;
+        return `<option value="${key}" ${selected === key ? "selected" : ""}>${value}</option>`;
+      }).join("");
+
+      return fields + constants;
+    }
+
+    function kcvInstallCompareUi() {
+      for (const h3 of document.querySelectorAll(".section h3")) {
+        const text = h3.textContent.trim().toLowerCase();
+
+        if (text === "time move filter") {
+          h3.closest(".section").style.display = "none";
+        }
+      }
+
+      if (document.getElementById("kcvCompareSection")) {
+        return;
+      }
+
+      let insertAfter = null;
+
+      for (const h3 of document.querySelectorAll(".section h3")) {
+        if (h3.textContent.trim().toLowerCase() === "numeric filters") {
+          insertAfter = h3.closest(".section");
+        }
+      }
+
+      const html = `
+        <div class="section" id="kcvCompareSection">
+          <h3>Compare filters</h3>
+
+          <div class="small" style="margin-bottom:8px">
+            Build unlimited field-vs-field or field-vs-number rules.
+            Example: Starting price &lt; Ending price.
+          </div>
+
+          <div id="kcvCompareRows"></div>
+
+          <div class="controls" style="margin-top:8px">
+            <button onclick="kcvAddCompareFilter()">+ Add filter</button>
+            <button onclick="kcvClearCompareFilters()">Clear compare filters</button>
+          </div>
+        </div>
+      `;
+
+      if (insertAfter) {
+        insertAfter.insertAdjacentHTML("afterend", html);
+      }
+    }
+
+    function kcvAddCompareFilter(lhs = "starting_price", op = "<", rhs = "ending_price") {
+      kcvCompareFilters.push({ lhs, op, rhs });
+      kcvRenderCompareRows();
+      applyFilters();
+    }
+
+    function kcvRemoveCompareFilter(index) {
+      kcvCompareFilters.splice(index, 1);
+      kcvRenderCompareRows();
+      applyFilters();
+    }
+
+    function kcvUpdateCompareFilter(index, key, value) {
+      if (!kcvCompareFilters[index]) {
+        return;
+      }
+
+      kcvCompareFilters[index][key] = value;
+      applyFilters();
+    }
+
+    function kcvClearCompareFilters() {
+      kcvCompareFilters = [];
+      kcvRenderCompareRows();
+      applyFilters();
+    }
+
+    function kcvRenderCompareRows() {
+      const box = document.getElementById("kcvCompareRows");
+
+      if (!box) {
+        return;
+      }
+
+      if (!kcvCompareFilters.length) {
+        box.innerHTML = `<div class="small">No compare filters active.</div>`;
+        return;
+      }
+
+      box.innerHTML = kcvCompareFilters.map((row, index) => {
+        return `
+          <div style="display:grid;grid-template-columns:1fr 78px 1fr 34px;gap:6px;margin:6px 0">
+            <select onchange="kcvUpdateCompareFilter(${index}, 'lhs', this.value)">
+              ${kcvFieldOptions(row.lhs)}
+            </select>
+
+            <select onchange="kcvUpdateCompareFilter(${index}, 'op', this.value)">
+              ${kcvOperatorOptions(row.op)}
+            </select>
+
+            <select onchange="kcvUpdateCompareFilter(${index}, 'rhs', this.value)">
+              ${kcvRightOptions(row.rhs)}
+            </select>
+
+            <button onclick="kcvRemoveCompareFilter(${index})">x</button>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function kcvResolveRightValue(record, token) {
+      token = String(token || "");
+
+      if (token.startsWith("const:")) {
+        return kcvNum(token.slice(6));
+      }
+
+      return kcvFieldValue(record, token);
+    }
+
+    function kcvComparePass(record) {
+      for (const row of kcvCompareFilters) {
+        const a = kcvFieldValue(record, row.lhs);
+        const b = kcvResolveRightValue(record, row.rhs);
+
+        let ok = true;
+
+        if (row.op === "<") ok = a < b;
+        else if (row.op === "<=") ok = a <= b;
+        else if (row.op === "=") ok = Math.abs(a - b) < 0.00001;
+        else if (row.op === ">=") ok = a >= b;
+        else if (row.op === ">") ok = a > b;
+        else if (row.op === "!=") ok = Math.abs(a - b) >= 0.00001;
+        else if (row.op === "-") ok = (a - b) > 0;
+        else if (row.op === "+") ok = (a + b) > 0;
+
+        if (!ok) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    const kcvOriginalBasePass = basePass;
+
+    basePass = function(record, includeMovement) {
+      if (!kcvOriginalBasePass(record, includeMovement)) {
+        return false;
+      }
+
+      return kcvComparePass(record);
+    };
+
+    const kcvOriginalClearFilters = clearFilters;
+
+    clearFilters = function() {
+      kcvCompareFilters = [];
+      kcvOriginalClearFilters();
+      kcvRenderCompareRows();
+    };
+
+    try {
+      quickTags.push(
+        "price_move_up",
+        "price_move_down",
+        "price_move_up_10",
+        "price_move_up_20",
+        "price_move_up_30",
+        "price_move_up_40",
+        "price_move_up_50",
+        "price_move_up_60",
+        "price_move_down_10",
+        "price_move_down_20",
+        "price_move_down_30",
+        "price_move_down_40",
+        "price_move_down_50",
+        "price_move_down_60",
+        "price_expansion",
+        "price_contraction"
+      );
+    } catch (error) {}
+
+    kcvInstallCompareUi();
+    kcvRenderCompareRows();
+
+
     loadData();
   </script>
 </body>

@@ -22,7 +22,8 @@
   "files": {
     "csv": "0025bd.csv",
     "json": "0025bd.json",
-    "npy": "0025bd.npy"
+    "npy": "0025bd.npy",
+    "png": "png charts/0025bd.png"
   },
   "tags": [
     "3_sets",
@@ -72,7 +73,17 @@
     "three_set_match",
     "tiebreaker",
     "underdog",
-    "very_high_volatility"
+    "very_high_volatility",
+    "price_move_down",
+    "negative_price_move",
+    "price_move_down_10",
+    "move_down_10",
+    "minus_10_down",
+    "price_move_down_20",
+    "move_down_20",
+    "minus_20_down",
+    "price_contraction",
+    "favorite_down_underdog_up"
   ],
   "volatility_score": 4.0411,
   "max_single_move": 25.89,
@@ -81,5 +92,16 @@
   "crossings_25": 8,
   "crossings_50": 2,
   "crossings_75": 10,
-  "first_cross_50_pct": 31.91
+  "first_cross_50_pct": 31.91,
+  "price_move": -22.94,
+  "abs_price_move": 22.94,
+  "favorite_starting_price": 25.0,
+  "favorite_ending_price": 2.06,
+  "underdog_starting_price": 78.63,
+  "underdog_ending_price": 99.0,
+  "favorite_price_move": -22.94,
+  "underdog_price_move": 20.37,
+  "price_expansion": false,
+  "price_contraction": true,
+  "png_file": "png charts/0025bd.png"
 }

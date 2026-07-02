@@ -22,7 +22,8 @@
   "files": {
     "csv": "0032aw.csv",
     "json": "0032aw.json",
-    "npy": "0032aw.npy"
+    "npy": "0032aw.npy",
+    "png": "png charts/0032aw.png"
   },
   "tags": [
     "3_sets",
@@ -55,7 +56,17 @@
     "starting_price_0032",
     "third_set_loser",
     "three_set_match",
-    "underdog"
+    "underdog",
+    "price_move_down",
+    "negative_price_move",
+    "price_move_down_10",
+    "move_down_10",
+    "minus_10_down",
+    "price_move_down_20",
+    "move_down_20",
+    "minus_20_down",
+    "price_expansion",
+    "favorite_up_underdog_down"
   ],
   "volatility_score": 0.9855,
   "max_single_move": 7.89,
@@ -64,5 +75,16 @@
   "crossings_25": 70,
   "crossings_50": 0,
   "crossings_75": 0,
-  "first_cross_50_pct": ""
+  "first_cross_50_pct": "",
+  "price_move": -26.56,
+  "abs_price_move": 26.56,
+  "favorite_starting_price": 62.93,
+  "favorite_ending_price": 99.0,
+  "underdog_starting_price": 31.93,
+  "underdog_ending_price": 5.37,
+  "favorite_price_move": 36.07,
+  "underdog_price_move": -26.56,
+  "price_expansion": true,
+  "price_contraction": false,
+  "png_file": "png charts/0032aw.png"
 }
