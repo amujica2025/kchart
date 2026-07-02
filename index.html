@@ -1,387 +1,265 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>KChart Viewer</title>
-
   <style>
-    :root{
-      --bg:#0b1020;
-      --head:#0b1224;
-      --panel:#111827;
-      --panel2:#0f172a;
-      --deep:#020617;
-      --line:#243244;
-      --line2:#334155;
-      --text:#e5e7eb;
-      --muted:#94a3b8;
-      --blue:#60a5fa;
-      --blue2:#1d4ed8;
-      --green:#86efac;
-      --red:#fda4af;
+    :root {
+      --bg: #0b1020;
+      --panel: #111827;
+      --panel2: #0f172a;
+      --deep: #020617;
+      --line: #27364c;
+      --line2: #475569;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --blue: #60a5fa;
+      --blue2: #1d4ed8;
+      --green: #86efac;
+      --red: #fda4af;
+      --yellow: #fbbf24;
     }
 
-    *{box-sizing:border-box}
+    * { box-sizing: border-box; }
 
-    body{
-      margin:0;
-      background:var(--bg);
-      color:var(--text);
-      font:13px/1.35 Arial,Helvetica,sans-serif;
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 13px/1.35 Arial, Helvetica, sans-serif;
     }
 
-    a{color:var(--blue);text-decoration:none}
-    a:hover{text-decoration:underline}
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
 
-    button,input,select{
-      background:var(--deep);
-      color:var(--text);
-      border:1px solid var(--line);
-      border-radius:8px;
-      padding:8px 10px;
-      font:inherit;
+    button,
+    input,
+    select {
+      background: var(--deep);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font: inherit;
     }
 
-    button{cursor:pointer}
-    button:hover,input:hover,select:hover{border-color:var(--blue)}
-    button.active{background:var(--blue2);border-color:var(--blue)}
+    button { cursor: pointer; }
+    button:hover, input:hover, select:hover { border-color: var(--blue); }
+    button.active { background: var(--blue2); border-color: var(--blue); }
 
-    header{
-      position:sticky;
-      top:0;
-      z-index:20;
-      display:grid;
-      gap:8px;
-      padding:10px 12px;
-      background:var(--head);
-      border-bottom:1px solid var(--line);
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      padding: 10px 12px;
+      display: grid;
+      gap: 8px;
+      background: #0b1224;
+      border-bottom: 1px solid var(--line);
     }
 
-    h1{font-size:18px;margin:0}
-    .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-    .status{color:var(--muted)}
-    .search{min-width:min(520px,100%);flex:1}
+    h1 { margin: 0; font-size: 18px; }
+    .muted { color: var(--muted); }
+    .row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .search { flex: 1; min-width: min(560px, 100%); }
 
-    .layout{
-      display:grid;
-      grid-template-columns:320px 1fr;
-      min-height:calc(100vh - 98px);
+    .layout {
+      display: grid;
+      grid-template-columns: 345px 1fr;
+      min-height: calc(100vh - 98px);
     }
 
-    aside{
-      position:sticky;
-      top:98px;
-      height:calc(100vh - 98px);
-      overflow:auto;
-      padding:12px;
-      border-right:1px solid var(--line);
-      background:#0c1325;
+    aside {
+      position: sticky;
+      top: 98px;
+      height: calc(100vh - 98px);
+      overflow: auto;
+      padding: 12px;
+      background: #0c1325;
+      border-right: 1px solid var(--line);
     }
 
-    main{padding:12px;overflow:hidden}
+    main { padding: 12px; overflow: hidden; }
 
-    .section{
-      background:var(--panel);
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:10px;
-      margin-bottom:10px;
+    .section {
+      margin-bottom: 10px;
+      padding: 10px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
     }
 
-    .section h3{
-      margin:0 0 8px;
-      color:#cbd5e1;
-      font-size:12px;
-      text-transform:uppercase;
-      letter-spacing:.06em;
+    .section h3 {
+      margin: 0 0 8px;
+      color: #cbd5e1;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
     }
 
-    .quick{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:6px;
+    .quick { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .quick button { text-align: left; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+    .field { display: grid; gap: 5px; margin: 7px 0; }
+    .small { color: var(--muted); font-size: 11px; }
+
+    .range-row {
+      display: grid;
+      grid-template-columns: 62px 1fr 1fr;
+      gap: 6px;
+      align-items: center;
+      margin: 6px 0;
     }
 
-    .quick button{
-      text-align:left;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+    .tagbox { display: flex; flex-wrap: wrap; gap: 5px; max-height: 285px; overflow: auto; }
+
+    .tag {
+      display: inline-flex;
+      padding: 4px 7px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--deep);
+      color: #cbd5e1;
+      font-size: 11px;
+      cursor: pointer;
+      white-space: nowrap;
     }
 
-    .range-row{
-      display:grid;
-      grid-template-columns:55px 1fr 1fr;
-      gap:6px;
-      align-items:center;
-      margin:6px 0;
+    .tag.active { background: var(--blue2); border-color: var(--blue); color: white; }
+    .tag.readonly { cursor: default; }
+
+    .summary { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+
+    .pill {
+      padding: 5px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: #cbd5e1;
+      font-size: 12px;
     }
 
-    .small{font-size:11px;color:var(--muted)}
-    .tag-search{width:100%;margin-bottom:8px}
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(285px, 1fr)); gap: 10px; }
+    .chart-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 12px; }
 
-    .tagbox{
-      display:flex;
-      flex-wrap:wrap;
-      gap:5px;
-      max-height:275px;
-      overflow:auto;
+    .card,
+    .chart-card {
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      cursor: pointer;
     }
 
-    .tag{
-      display:inline-flex;
-      max-width:100%;
-      padding:4px 7px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:var(--deep);
-      color:#cbd5e1;
-      cursor:pointer;
-      font-size:11px;
-      white-space:nowrap;
+    .card:hover,
+    .chart-card:hover { border-color: var(--line2); transform: translateY(-1px); }
+
+    .card-top { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+    .id { font-weight: 700; color: white; letter-spacing: .03em; }
+    .name { font-weight: 700; font-size: 14px; }
+    .opp { color: var(--muted); margin-bottom: 8px; }
+
+    .badges { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
+
+    .badge {
+      padding: 2px 6px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 11px;
+      color: #cbd5e1;
     }
 
-    .tag.active{
-      background:var(--blue2);
-      border-color:var(--blue);
-      color:white;
+    .badge.win { background: var(--green); border-color: var(--green); color: #052e16; }
+    .badge.loss { background: var(--red); border-color: var(--red); color: #450a0a; }
+
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 8px 0; }
+
+    .metric {
+      padding: 6px 4px;
+      text-align: center;
+      border-radius: 8px;
+      border: 1px solid #1e293b;
+      background: var(--deep);
     }
 
-    .tag.readonly{cursor:default}
+    .metric b { display: block; color: white; font-size: 14px; }
+    .metric span { color: var(--muted); font-size: 10px; text-transform: uppercase; }
 
-    .summary{
-      display:flex;
-      flex-wrap:wrap;
-      align-items:center;
-      gap:8px;
-      margin-bottom:10px;
+    .filelinks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .linkbtn { border: 0; background: transparent; padding: 0; color: var(--blue); }
+    .tagsline { margin-top: 8px; max-height: 42px; overflow: hidden; color: var(--muted); font-size: 11px; }
+
+    .thumb {
+      margin-top: 8px;
+      min-height: 155px;
+      display: grid;
+      place-items: center;
+      background: var(--deep);
+      border: 1px solid #1e293b;
+      border-radius: 9px;
+      overflow: hidden;
     }
 
-    .pill{
-      display:inline-flex;
-      padding:4px 8px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:var(--panel);
-      color:#cbd5e1;
+    .thumb img { width: 100%; display: block; }
+
+    .tablewrap { overflow: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { padding: 7px; border-bottom: 1px solid #1e293b; text-align: left; vertical-align: top; }
+    th { position: sticky; top: 0; background: var(--panel); color: #cbd5e1; cursor: pointer; white-space: nowrap; }
+    tr:hover { background: var(--panel2); }
+
+    .hidden { display: none !important; }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(0, 0, 0, .75);
     }
 
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(285px,1fr));
-      gap:10px;
+    .modal.open { display: flex; }
+
+    .modalbox {
+      width: min(1220px, 96vw);
+      height: min(890px, 94vh);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 20px 70px rgba(0,0,0,.45);
     }
 
-    .card{
-      min-height:170px;
-      padding:10px;
-      border:1px solid var(--line);
-      border-radius:12px;
-      background:var(--panel);
-      cursor:pointer;
+    .modalhead {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
     }
 
-    .card:hover{
-      border-color:var(--line2);
-      transform:translateY(-1px);
-    }
+    .modalbody { overflow: auto; padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .preview, pre, .similar-panel { background: var(--deep); border: 1px solid #1e293b; border-radius: 10px; padding: 10px; }
+    .preview img { max-width: 100%; border: 1px solid var(--line); border-radius: 8px; }
+    pre { white-space: pre-wrap; max-height: 370px; overflow: auto; color: #cbd5e1; }
+    .sim-chart { width: 100%; height: 260px; margin-top: 10px; background: #020617; border: 1px solid #1e293b; border-radius: 10px; }
+    .similar-list { max-height: 220px; overflow: auto; display: grid; gap: 5px; margin-top: 8px; }
+    .sim-row { display: grid; grid-template-columns: 24px 70px 70px 1fr; gap: 6px; align-items: center; color: #cbd5e1; font-size: 12px; }
+    .error { padding: 14px; border-radius: 10px; border: 1px solid #7f1d1d; background: #450a0a; color: #fecaca; }
 
-    .card-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:8px;
-      margin-bottom:5px;
-    }
-
-    .id{
-      color:white;
-      font-weight:700;
-      letter-spacing:.03em;
-    }
-
-    .badges{
-      display:flex;
-      justify-content:flex-end;
-      flex-wrap:wrap;
-      gap:5px;
-    }
-
-    .badge{
-      padding:2px 6px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      color:#cbd5e1;
-      font-size:11px;
-      white-space:nowrap;
-    }
-
-    .badge.win{background:var(--green);border-color:var(--green);color:#052e16}
-    .badge.loss{background:var(--red);border-color:var(--red);color:#450a0a}
-
-    .name{
-      margin-bottom:2px;
-      font-size:14px;
-      font-weight:700;
-    }
-
-    .opp{
-      margin-bottom:8px;
-      color:var(--muted);
-    }
-
-    .metrics{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:6px;
-      margin:8px 0;
-    }
-
-    .metric{
-      background:var(--deep);
-      border:1px solid #1e293b;
-      border-radius:8px;
-      padding:6px 4px;
-      text-align:center;
-    }
-
-    .metric b{
-      display:block;
-      color:white;
-      font-size:14px;
-    }
-
-    .metric span{
-      color:var(--muted);
-      font-size:10px;
-      text-transform:uppercase;
-    }
-
-    .filelinks{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:8px;
-    }
-
-    .tagsline{
-      max-height:42px;
-      overflow:hidden;
-      margin-top:8px;
-      color:var(--muted);
-      font-size:11px;
-    }
-
-    .tablewrap{
-      overflow:auto;
-      border:1px solid var(--line);
-      border-radius:12px;
-      background:var(--panel);
-    }
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:12px;
-    }
-
-    th,td{
-      padding:7px;
-      border-bottom:1px solid #1e293b;
-      text-align:left;
-      vertical-align:top;
-    }
-
-    th{
-      position:sticky;
-      top:0;
-      z-index:2;
-      background:var(--panel);
-      color:#cbd5e1;
-      cursor:pointer;
-      white-space:nowrap;
-    }
-
-    tr:hover{background:var(--panel2)}
-    .hidden{display:none!important}
-
-    .modal{
-      position:fixed;
-      inset:0;
-      z-index:50;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-      background:rgba(0,0,0,.75);
-    }
-
-    .modal.open{display:flex}
-
-    .modalbox{
-      width:min(1180px,96vw);
-      height:min(860px,94vh);
-      display:grid;
-      grid-template-rows:auto 1fr;
-      overflow:hidden;
-      border:1px solid var(--line);
-      border-radius:14px;
-      background:var(--bg);
-      box-shadow:0 18px 60px rgba(0,0,0,.35);
-    }
-
-    .modalhead{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      padding:10px 12px;
-      border-bottom:1px solid var(--line);
-      background:var(--panel);
-    }
-
-    .modalbody{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-      overflow:auto;
-      padding:12px;
-    }
-
-    .preview,pre{
-      background:var(--deep);
-      border:1px solid #1e293b;
-      border-radius:10px;
-      padding:10px;
-    }
-
-    .preview img{
-      max-width:100%;
-      border:1px solid var(--line);
-      border-radius:8px;
-    }
-
-    pre{
-      white-space:pre-wrap;
-      max-height:380px;
-      overflow:auto;
-      color:#cbd5e1;
-    }
-
-    .error{
-      padding:14px;
-      border:1px solid #7f1d1d;
-      border-radius:10px;
-      background:#450a0a;
-      color:#fecaca;
-    }
-
-    @media(max-width:900px){
-      .layout{grid-template-columns:1fr}
-      aside{position:relative;top:0;height:auto}
-      .modalbody{grid-template-columns:1fr}
-      .search{min-width:100%}
+    @media (max-width: 920px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { position: relative; top: 0; height: auto; }
+      .modalbody { grid-template-columns: 1fr; }
+      .search { min-width: 100%; }
     }
   </style>
 </head>
@@ -390,11 +268,11 @@
   <header>
     <div class="row">
       <h1>KChart Viewer</h1>
-      <span class="status" id="status">Loading…</span>
+      <span class="muted" id="status">Loading…</span>
     </div>
 
     <div class="row">
-      <input id="q" class="search" placeholder="Search id, player, opponent, workbook, tag…" oninput="applyFilters()">
+      <input id="q" class="search" placeholder="Search id, player, opponent, workbook, tag, score…" oninput="applyFilters()" />
 
       <select id="sort" onchange="applyFilters()">
         <option value="id">Sort: ID</option>
@@ -416,11 +294,11 @@
 
       <select id="view" onchange="render()">
         <option value="cards">Cards</option>
+        <option value="charts">Charts</option>
         <option value="table">Table</option>
       </select>
 
       <button onclick="clearFilters()">Clear</button>
-
       <a href="master_player_index.json">master index</a>
       <a href="master_player_manifest.csv">manifest csv</a>
       <a href="KCHART_DATA_INSTRUCTIONS.md">instructions</a>
@@ -430,6 +308,22 @@
   <div class="layout">
     <aside>
       <div class="section">
+        <h3>Player / Opponent</h3>
+
+        <div class="field">
+          <span class="small">Player</span>
+          <input id="playerFilter" list="playerList" placeholder="Type/select player…" oninput="applyFilters()" />
+          <datalist id="playerList"></datalist>
+        </div>
+
+        <div class="field">
+          <span class="small">Opponent</span>
+          <input id="opponentFilter" list="opponentList" placeholder="Type/select opponent…" oninput="applyFilters()" />
+          <datalist id="opponentList"></datalist>
+        </div>
+      </div>
+
+      <div class="section">
         <h3>Quick filters</h3>
         <div class="quick" id="quickFilters"></div>
       </div>
@@ -437,40 +331,53 @@
       <div class="section">
         <h3>Numeric filters</h3>
 
-        <div class="range-row">
-          <span class="small">Start</span>
-          <input id="startMin" type="number" placeholder="min" oninput="applyFilters()">
-          <input id="startMax" type="number" placeholder="max" oninput="applyFilters()">
+        <div class="range-row"><span class="small">Start</span><input id="startMin" type="number" placeholder="min" oninput="applyFilters()" /><input id="startMax" type="number" placeholder="max" oninput="applyFilters()" /></div>
+        <div class="range-row"><span class="small">End</span><input id="endMin" type="number" placeholder="min" oninput="applyFilters()" /><input id="endMax" type="number" placeholder="max" oninput="applyFilters()" /></div>
+        <div class="range-row"><span class="small">Vol</span><input id="volMin" type="number" placeholder="min" oninput="applyFilters()" /><input id="volMax" type="number" placeholder="max" oninput="applyFilters()" /></div>
+        <div class="range-row"><span class="small">Range</span><input id="rangeMin" type="number" placeholder="min" oninput="applyFilters()" /><input id="rangeMax" type="number" placeholder="max" oninput="applyFilters()" /></div>
+        <div class="range-row"><span class="small">Flips</span><input id="flipMin" type="number" placeholder="min" oninput="applyFilters()" /><input id="flipMax" type="number" placeholder="max" oninput="applyFilters()" /></div>
+      </div>
+
+      <div class="section">
+        <h3>Time move filter</h3>
+        <div class="range-row"><span class="small">Move</span><input id="moveCents" type="number" placeholder="cents" /><input id="moveMinutes" type="number" placeholder="minutes" /></div>
+
+        <div class="field">
+          <select id="moveDirection">
+            <option value="any">Any direction</option>
+            <option value="up">Up only</option>
+            <option value="down">Down only</option>
+          </select>
         </div>
 
-        <div class="range-row">
-          <span class="small">End</span>
-          <input id="endMin" type="number" placeholder="min" oninput="applyFilters()">
-          <input id="endMax" type="number" placeholder="max" oninput="applyFilters()">
+        <div class="row">
+          <button onclick="runMovementFilter()">Run</button>
+          <button onclick="clearMovementFilter()">Clear</button>
         </div>
 
-        <div class="range-row">
-          <span class="small">Vol</span>
-          <input id="volMin" type="number" placeholder="min" oninput="applyFilters()">
-          <input id="volMax" type="number" placeholder="max" oninput="applyFilters()">
-        </div>
+        <div class="small" id="moveStatus">Loads CSVs only when you click Run.</div>
+      </div>
 
-        <div class="range-row">
-          <span class="small">Range</span>
-          <input id="rangeMin" type="number" placeholder="min" oninput="applyFilters()">
-          <input id="rangeMax" type="number" placeholder="max" oninput="applyFilters()">
-        </div>
-
-        <div class="range-row">
-          <span class="small">Flips</span>
-          <input id="flipMin" type="number" placeholder="min" oninput="applyFilters()">
-          <input id="flipMax" type="number" placeholder="max" oninput="applyFilters()">
+      <div class="section">
+        <h3>Score filters</h3>
+        <div class="field">
+          <span class="small">First set margin</span>
+          <select id="firstSetMargin" onchange="applyFilters()">
+            <option value="">Any</option>
+            <option value="6-0">6-0</option>
+            <option value="6-1">6-1</option>
+            <option value="6-2">6-2</option>
+            <option value="6-3">6-3</option>
+            <option value="6-4">6-4</option>
+            <option value="7-5">7-5</option>
+            <option value="7-6">7-6</option>
+          </select>
         </div>
       </div>
 
       <div class="section">
         <h3>All tags</h3>
-        <input id="tagSearch" class="tag-search" placeholder="Filter tags…" oninput="renderTags()">
+        <input id="tagSearch" style="width:100%;margin-bottom:8px" placeholder="Filter tags…" oninput="renderTags()" />
         <div class="tagbox" id="tags"></div>
       </div>
     </aside>
@@ -479,10 +386,12 @@
       <div class="summary">
         <span class="pill" id="countPill">0 datasets</span>
         <span class="pill" id="activePill">0 active tags</span>
+        <span class="pill" id="movePill">No movement filter</span>
         <span class="pill">Read-only viewer</span>
       </div>
 
       <div class="grid" id="cards"></div>
+      <div class="chart-grid hidden" id="charts"></div>
 
       <div class="tablewrap hidden" id="tablewrap">
         <table>
@@ -516,18 +425,26 @@
       <div class="modalbody">
         <div>
           <div class="preview" id="chartPreview"></div>
-
           <h3>Files</h3>
           <div class="filelinks" id="modalFiles"></div>
-
           <h3>Tags</h3>
           <div class="tagbox" id="modalTags"></div>
         </div>
 
         <div>
+          <h3>Similar pattern search</h3>
+          <div class="similar-panel">
+            <div class="row">
+              <button onclick="findSimilarFromModal()">Find similar</button>
+              <label class="small"><input type="checkbox" id="similarUseFiltered" /> current filtered set only</label>
+            </div>
+            <div class="small" id="similarStatus">Uses CSV price paths. This can take time across 8,758 files.</div>
+            <svg class="sim-chart" id="similarChart"></svg>
+            <div class="similar-list" id="similarList"></div>
+          </div>
+
           <h3>Metadata</h3>
           <pre id="modalMeta"></pre>
-
           <h3>CSV preview</h3>
           <pre id="csvPreview">Click a dataset to load CSV preview.</pre>
         </div>
@@ -540,550 +457,759 @@
     let filtered = [];
     let allTags = [];
     let activeTags = new Set();
+    let movementMatchedIds = null;
+    let currentModalRecord = null;
+    let similarResults = [];
+    let similarSeriesCache = new Map();
 
     const quickTags = [
-      "winner","loser","heavy_favorite","favorite","slight_favorite",
-      "slight_underdog","underdog","heavy_underdog","2_sets","3_sets",
-      "straight_sets","three_set_match","tiebreaker","no_tiebreaker",
-      "very_high_volatility","high_volatility","medium_volatility","low_volatility",
-      "oscillating_shape","jagged_shape","smooth_trend_shape","uptrend_finish",
-      "downtrend_finish","v_shape_recovery","inverted_v_failed_spike",
-      "longshot_comeback_winner","favorite_collapse_loser","drawdown_recovery"
+      "winner", "loser", "heavy_favorite", "favorite", "slight_favorite",
+      "slight_underdog", "underdog", "heavy_underdog", "2_sets", "3_sets",
+      "straight_sets", "three_set_match", "tiebreaker", "no_tiebreaker",
+      "very_high_volatility", "high_volatility", "medium_volatility", "low_volatility",
+      "oscillating_shape", "jagged_shape", "smooth_trend_shape", "uptrend_finish",
+      "downtrend_finish", "v_shape_recovery", "inverted_v_failed_spike",
+      "longshot_comeback_winner", "favorite_collapse_loser", "drawdown_recovery"
     ];
 
-    function numberValue(value){
+    function num(value) {
       const x = Number(value);
       return Number.isFinite(x) ? x : 0;
     }
 
-    function encodePath(path){
+    function enc(path) {
       return path ? encodeURI(path) : "#";
     }
 
-    function compactTag(tag){
-      return String(tag || "").replaceAll("_"," ");
+    function esc(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
     }
 
-    function tagList(record){
-      if(Array.isArray(record.tags)){
-        return record.tags.map(String).filter(Boolean);
-      }
+    function compact(tag) {
+      return String(tag || "").replaceAll("_", " ");
+    }
 
-      if(typeof record.tags === "string"){
-        return record.tags.split(/[|,;]/).map(x => x.trim()).filter(Boolean);
-      }
-
+    function tagList(record) {
+      if (Array.isArray(record.tags)) return record.tags.map(String).filter(Boolean);
+      if (typeof record.tags === "string") return record.tags.split(/[|,;]/).map(x => x.trim()).filter(Boolean);
       return [];
     }
 
-    function filesOf(record){
+    function isPlayerOpponentTag(tag) {
+      tag = String(tag || "").toLowerCase();
+      return tag.startsWith("player_") || tag.startsWith("opponent_") || tag.startsWith("player:") || tag.startsWith("opponent:");
+    }
+
+    function filesOf(record) {
       const id = record.id || record.dataset_id || "";
       const files = record.files || {};
-
       return {
         csv: files.csv || record.csv || record.csv_file || record.csv_path || (id ? "csvprice data/" + id + ".csv" : ""),
         json: files.json || record.json || record.json_file || record.json_path || (id ? "json data/" + id + ".json" : ""),
         npy: files.npy || record.npy || record.npy_file || record.npy_path || (id ? "npy data/" + id + ".npy" : ""),
-        png: files.png || record.png || record.png_file || record.png_path || (id ? "png charts/" + id + ".png" : "")
+        png: files.png || record.png || record.png_file || record.png_path || ""
       };
     }
 
-    function metric(record,key){
-      if(record.metrics && record.metrics[key] != null){
-        return record.metrics[key];
-      }
+    function pngCandidates(record) {
+      const id = record.id || "";
+      const fromFile = filesOf(record).png;
+      return [...new Set([
+        fromFile,
+        id ? "png charts/" + id + ".png" : "",
+        id ? "png charts/" + id + "_trimmed.png" : "",
+        id ? "png charts/" + id + "_untrimmed.png" : "",
+        id ? "charts/" + id + ".png" : "",
+        id ? "png/" + id + ".png" : ""
+      ].filter(Boolean))];
+    }
 
-      if(record[key] != null){
-        return record[key];
-      }
-
+    function metric(record, key) {
+      if (record.metrics && record.metrics[key] != null) return record.metrics[key];
+      if (record[key] != null) return record[key];
       return "";
     }
 
-    function hasTag(record,tag){
-      return tagList(record).includes(tag);
-    }
-
-    function displayNumber(value){
-      if(value === "" || value == null){
-        return "";
-      }
-
+    function displayNumber(value) {
+      if (value === "" || value == null) return "";
       const x = Number(value);
-
-      if(!Number.isFinite(x)){
-        return String(value);
-      }
-
-      return String(Math.round(x * 100) / 100);
+      return Number.isFinite(x) ? String(Math.round(x * 100) / 100) : String(value);
     }
 
-    function normalizeRecord(record){
+    function normalizeRecord(record) {
       const id = record.id || record.dataset_id || record.player_id || "";
-
       return {
         ...record,
         id,
         player_name: record.player_name || record.player || "",
         opponent_name: record.opponent_name || record.opponent || "",
         source_workbook: record.source_workbook || record.workbook || record.source_file || record.file || "",
+        final_score: record.final_score || record.score || record.match_score || "",
         starting_price: record.starting_price ?? record.start_price ?? record.open_price ?? "",
         ending_price: record.ending_price ?? record.end_price ?? record.close_price ?? "",
         row_count: record.row_count ?? record.rows ?? ""
       };
     }
 
-    function normalizeIndex(raw){
-      if(Array.isArray(raw)){
-        return raw.map(normalizeRecord);
+    function normalizeIndex(raw) {
+      if (Array.isArray(raw)) return raw.map(normalizeRecord);
+      for (const key of ["players", "records", "datasets", "items", "data", "player_datasets", "index"]) {
+        if (Array.isArray(raw[key])) return raw[key].map(normalizeRecord);
       }
-
-      const possibleArrays = [
-        raw.players,raw.records,raw.datasets,raw.items,raw.data,
-        raw.player_datasets,raw.index
-      ];
-
-      for(const item of possibleArrays){
-        if(Array.isArray(item)){
-          return item.map(normalizeRecord);
-        }
-      }
-
-      if(raw && typeof raw === "object"){
-        return Object.values(raw)
-          .filter(value => value && typeof value === "object")
-          .map(normalizeRecord);
-      }
-
+      if (raw && typeof raw === "object") return Object.values(raw).filter(v => v && typeof v === "object").map(normalizeRecord);
       return [];
     }
 
-    function parseCsv(text){
+    function parseCsv(text) {
       const rows = [];
       let row = [];
       let cell = "";
       let quote = false;
-
-      for(let i = 0; i < text.length; i++){
+      for (let i = 0; i < text.length; i++) {
         const ch = text[i];
         const next = text[i + 1];
-
-        if(quote){
-          if(ch === '"' && next === '"'){
-            cell += '"';
-            i++;
-          }else if(ch === '"'){
-            quote = false;
-          }else{
-            cell += ch;
-          }
-        }else{
-          if(ch === '"'){
-            quote = true;
-          }else if(ch === ","){
-            row.push(cell);
-            cell = "";
-          }else if(ch === "\n"){
-            row.push(cell);
-            rows.push(row);
-            row = [];
-            cell = "";
-          }else if(ch !== "\r"){
-            cell += ch;
-          }
+        if (quote) {
+          if (ch === '"' && next === '"') { cell += '"'; i++; }
+          else if (ch === '"') quote = false;
+          else cell += ch;
+        } else {
+          if (ch === '"') quote = true;
+          else if (ch === ",") { row.push(cell); cell = ""; }
+          else if (ch === "\n") { row.push(cell); rows.push(row); row = []; cell = ""; }
+          else if (ch !== "\r") cell += ch;
         }
       }
-
-      if(cell || row.length){
-        row.push(cell);
-        rows.push(row);
-      }
-
-      if(!rows.length){
-        return [];
-      }
-
-      const headers = rows[0].map(x => x.trim());
-
-      return rows.slice(1)
-        .filter(r => r.some(Boolean))
-        .map(r => {
-          const obj = {};
-          headers.forEach((h,i) => obj[h] = r[i] || "");
-          return normalizeRecord(obj);
-        });
+      if (cell || row.length) { row.push(cell); rows.push(row); }
+      return rows;
     }
 
-    async function loadData(){
-      try{
-        const response = await fetch("master_player_index.json",{cache:"no-store"});
+    function parseManifestCsv(text) {
+      const rows = parseCsv(text);
+      if (!rows.length) return [];
+      const headers = rows[0].map(x => x.trim());
+      return rows.slice(1).filter(r => r.some(Boolean)).map(r => {
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = r[i] || "");
+        return normalizeRecord(obj);
+      });
+    }
 
-        if(response.ok){
-          const raw = await response.json();
-          data = normalizeIndex(raw);
-        }
-      }catch(error){
-        data = [];
+    function setScores(record) {
+      const raw = String(record.final_score || record.score || record.match_score || "");
+      return [...raw.matchAll(/(\d+)\s*[-:]\s*(\d+)/g)]
+        .map(m => [Number(m[1]), Number(m[2])])
+        .filter(p => Number.isFinite(p[0]) && Number.isFinite(p[1]));
+    }
+
+    function firstSetMarginLabel(record) {
+      const sets = setScores(record);
+      if (!sets.length) return "";
+      const a = sets[0][0];
+      const b = sets[0][1];
+      return Math.max(a, b) + "-" + Math.min(a, b);
+    }
+
+    function scoreTags(record) {
+      const tags = [];
+      const sets = setScores(record);
+      if (!sets.length) return tags;
+      let playerSets = 0;
+      let oppSets = 0;
+      sets.forEach((pair, idx) => {
+        const a = pair[0];
+        const b = pair[1];
+        const setNo = idx + 1;
+        const hi = Math.max(a, b);
+        const lo = Math.min(a, b);
+        tags.push("set" + setNo + "_player_score_" + a + "_" + b);
+        tags.push("set" + setNo + "_margin_" + hi + "_" + lo);
+        if (a > b) { playerSets++; tags.push("set" + setNo + "_player_won"); }
+        else if (b > a) { oppSets++; tags.push("set" + setNo + "_player_lost"); }
+        if (hi === 7 && lo === 6) tags.push("set" + setNo + "_tiebreaker_score");
+      });
+      tags.push("match_sets_" + sets.length);
+      tags.push("match_score_" + playerSets + "_" + oppSets);
+      const first = firstSetMarginLabel(record);
+      if (first) tags.push("first_set_margin_" + first.replace("-", "_"));
+      return tags;
+    }
+
+    function allRecordTags(record) {
+      return [...new Set([...tagList(record), ...scoreTags(record)])];
+    }
+
+    function tagGroup(tag) {
+      tag = String(tag || "");
+      if (tag.startsWith("starting_bucket_")) return "starting_bucket";
+      if (tag.startsWith("ending_bucket_")) return "ending_bucket";
+      if (tag.startsWith("starting_price_")) return "starting_price";
+      if (tag.startsWith("ending_price_")) return "ending_price";
+      if (tag.startsWith("set1_margin_")) return "set1_margin";
+      if (tag.startsWith("set2_margin_")) return "set2_margin";
+      if (tag.startsWith("set3_margin_")) return "set3_margin";
+      if (tag.startsWith("first_set_margin_")) return "first_set_margin";
+      if (tag.startsWith("match_score_")) return "match_score";
+      if (tag.startsWith("match_sets_")) return "match_sets";
+      if (["heavy_favorite", "favorite", "slight_favorite", "slight_underdog", "underdog", "heavy_underdog"].includes(tag)) return "role";
+      if (["winner", "loser"].includes(tag)) return "result";
+      if (["2_sets", "3_sets", "straight_sets", "three_set_match"].includes(tag)) return "sets";
+      if (["tiebreaker", "no_tiebreaker", "tiebreaker_unknown"].includes(tag)) return "tiebreaker";
+      if (["very_high_volatility", "high_volatility", "medium_volatility", "low_volatility"].includes(tag)) return "volatility_bucket";
+      if (["extreme_range", "large_range", "medium_range", "small_range"].includes(tag)) return "range_bucket";
+      if (tag.endsWith("_shape")) return "shape";
+      if (tag.endsWith("_finish")) return "finish";
+      return tag;
+    }
+
+    function groupedActiveTags() {
+      const groups = new Map();
+      for (const tag of activeTags) {
+        const group = tagGroup(tag);
+        if (!groups.has(group)) groups.set(group, []);
+        groups.get(group).push(tag);
+      }
+      return [...groups.values()];
+    }
+
+    function hasRecordTag(record, tag) {
+      return allRecordTags(record).includes(tag);
+    }
+
+    async function loadData() {
+      try {
+        const res = await fetch("master_player_index.json", { cache: "no-store" });
+        if (res.ok) data = normalizeIndex(await res.json());
+      } catch (e) { data = []; }
+
+      if (!data.length) {
+        try {
+          const res = await fetch("master_player_manifest.csv", { cache: "no-store" });
+          if (res.ok) data = parseManifestCsv(await res.text());
+        } catch (e) { data = []; }
       }
 
-      if(!data.length){
-        try{
-          const response = await fetch("master_player_manifest.csv",{cache:"no-store"});
-
-          if(response.ok){
-            const text = await response.text();
-            data = parseCsv(text);
-          }
-        }catch(error){
-          data = [];
-        }
-      }
-
-      if(!data.length){
-        showLoadError();
+      if (!data.length) {
+        document.getElementById("status").textContent = "Could not load dataset";
+        document.getElementById("cards").innerHTML = "<div class='error'>Could not load master_player_index.json or master_player_manifest.csv.</div>";
         return;
       }
 
-      allTags = [...new Set(data.flatMap(tagList))].sort();
+      allTags = [...new Set(data.flatMap(allRecordTags))]
+        .filter(tag => !isPlayerOpponentTag(tag))
+        .sort();
 
+      buildPeopleMenus();
       renderQuickFilters();
       renderTags();
       applyFilters();
     }
 
-    function showLoadError(){
-      document.getElementById("status").textContent = "Could not load dataset";
-      document.getElementById("cards").innerHTML = `
-        <div class="error">
-          Could not load master_player_index.json or master_player_manifest.csv.
-          Place this HTML file in the same folder as those files.
-        </div>
-      `;
+    function buildPeopleMenus() {
+      const players = [...new Set(data.map(r => r.player_name).filter(Boolean))].sort();
+      const opponents = [...new Set(data.map(r => r.opponent_name).filter(Boolean))].sort();
+      document.getElementById("playerList").innerHTML = players.map(x => `<option value="${esc(x)}"></option>`).join("");
+      document.getElementById("opponentList").innerHTML = opponents.map(x => `<option value="${esc(x)}"></option>`).join("");
     }
 
-    function renderQuickFilters(){
+    function renderQuickFilters() {
       const box = document.getElementById("quickFilters");
       box.innerHTML = "";
-
       quickTags.forEach(tag => {
         const button = document.createElement("button");
-        button.textContent = compactTag(tag);
+        button.textContent = compact(tag);
         button.title = tag;
         button.onclick = () => toggleTag(tag);
-
-        if(activeTags.has(tag)){
-          button.classList.add("active");
-        }
-
+        if (activeTags.has(tag)) button.classList.add("active");
         box.appendChild(button);
       });
     }
 
-    function renderTags(){
-      const query = document.getElementById("tagSearch").value.toLowerCase().trim();
+    function renderTags() {
+      const q = document.getElementById("tagSearch").value.toLowerCase().trim();
       const box = document.getElementById("tags");
       box.innerHTML = "";
-
-      allTags
-        .filter(tag => !query || tag.toLowerCase().includes(query))
-        .forEach(tag => {
-          const span = document.createElement("span");
-          span.className = "tag" + (activeTags.has(tag) ? " active" : "");
-          span.textContent = tag;
-          span.title = tag;
-          span.onclick = () => toggleTag(tag);
-          box.appendChild(span);
-        });
+      allTags.filter(tag => !q || tag.toLowerCase().includes(q)).forEach(tag => {
+        const span = document.createElement("span");
+        span.className = "tag" + (activeTags.has(tag) ? " active" : "");
+        span.textContent = tag;
+        span.title = tag;
+        span.onclick = () => toggleTag(tag);
+        box.appendChild(span);
+      });
     }
 
-    function toggleTag(tag){
-      if(activeTags.has(tag)){
-        activeTags.delete(tag);
-      }else{
-        activeTags.add(tag);
-      }
-
+    function toggleTag(tag) {
+      activeTags.has(tag) ? activeTags.delete(tag) : activeTags.add(tag);
       renderQuickFilters();
       renderTags();
       applyFilters();
     }
 
-    function passNumeric(record,key,minId,maxId){
+    function passNumeric(record, key, minId, maxId) {
       const min = document.getElementById(minId).value;
       const max = document.getElementById(maxId).value;
-      const value = numberValue(metric(record,key));
-
-      if(min !== "" && value < numberValue(min)){
-        return false;
-      }
-
-      if(max !== "" && value > numberValue(max)){
-        return false;
-      }
-
+      const value = num(metric(record, key));
+      if (min !== "" && value < num(min)) return false;
+      if (max !== "" && value > num(max)) return false;
       return true;
     }
 
-    function applyFilters(){
+    function basePass(record, includeMovement) {
       const query = document.getElementById("q").value.toLowerCase().trim();
+      const playerQ = document.getElementById("playerFilter").value.toLowerCase().trim();
+      const oppQ = document.getElementById("opponentFilter").value.toLowerCase().trim();
+      const firstSetMargin = document.getElementById("firstSetMargin").value;
 
-      filtered = data.filter(record => {
-        if(query){
-          const haystack = [
-            record.id,
-            record.player_name,
-            record.opponent_name,
-            record.source_workbook,
-            tagList(record).join(" "),
-            JSON.stringify(filesOf(record))
-          ].join(" ").toLowerCase();
+      if (query) {
+        const haystack = [
+          record.id,
+          record.player_name,
+          record.opponent_name,
+          record.source_workbook,
+          record.final_score,
+          allRecordTags(record).join(" "),
+          JSON.stringify(filesOf(record))
+        ].join(" ").toLowerCase();
+        if (!haystack.includes(query)) return false;
+      }
 
-          if(!haystack.includes(query)){
-            return false;
-          }
-        }
+      if (playerQ && !String(record.player_name || "").toLowerCase().includes(playerQ)) return false;
+      if (oppQ && !String(record.opponent_name || "").toLowerCase().includes(oppQ)) return false;
 
-        for(const tag of activeTags){
-          if(!hasTag(record,tag)){
-            return false;
-          }
-        }
+      for (const groupTags of groupedActiveTags()) {
+        if (!groupTags.some(tag => hasRecordTag(record, tag))) return false;
+      }
 
-        if(!passNumeric(record,"starting_price","startMin","startMax")) return false;
-        if(!passNumeric(record,"ending_price","endMin","endMax")) return false;
-        if(!passNumeric(record,"volatility_score","volMin","volMax")) return false;
-        if(!passNumeric(record,"range_points","rangeMin","rangeMax")) return false;
-        if(!passNumeric(record,"direction_flips","flipMin","flipMax")) return false;
+      if (!passNumeric(record, "starting_price", "startMin", "startMax")) return false;
+      if (!passNumeric(record, "ending_price", "endMin", "endMax")) return false;
+      if (!passNumeric(record, "volatility_score", "volMin", "volMax")) return false;
+      if (!passNumeric(record, "range_points", "rangeMin", "rangeMax")) return false;
+      if (!passNumeric(record, "direction_flips", "flipMin", "flipMax")) return false;
+      if (firstSetMargin && firstSetMarginLabel(record) !== firstSetMargin) return false;
+      if (includeMovement && movementMatchedIds && !movementMatchedIds.has(record.id)) return false;
+      return true;
+    }
 
-        return true;
-      });
-
+    function applyFilters() {
+      filtered = data.filter(record => basePass(record, true));
       sortFiltered();
       render();
     }
 
-    function sortFiltered(){
+    function sortFiltered() {
       const key = document.getElementById("sort").value;
       const direction = document.getElementById("dir").value;
-
-      const numeric = new Set([
-        "starting_price","ending_price","volatility_score",
-        "range_points","direction_flips","max_single_move","row_count"
-      ]);
-
-      filtered.sort((a,b) => {
-        const av = metric(a,key) || a[key] || "";
-        const bv = metric(b,key) || b[key] || "";
-
-        if(numeric.has(key)){
-          return numberValue(av) - numberValue(bv);
-        }
-
-        return String(av).localeCompare(String(bv));
+      const numeric = new Set(["starting_price", "ending_price", "volatility_score", "range_points", "direction_flips", "max_single_move", "row_count"]);
+      filtered.sort((a, b) => {
+        const av = metric(a, key) || a[key] || "";
+        const bv = metric(b, key) || b[key] || "";
+        return numeric.has(key) ? num(av) - num(bv) : String(av).localeCompare(String(bv));
       });
-
-      if(direction === "desc"){
-        filtered.reverse();
-      }
+      if (direction === "desc") filtered.reverse();
     }
 
-    function setSort(key){
+    function setSort(key) {
       document.getElementById("sort").value = key;
       applyFilters();
     }
 
-    function clearFilters(){
+    function clearFilters() {
       activeTags.clear();
-
-      [
-        "q","tagSearch","startMin","startMax","endMin","endMax",
-        "volMin","volMax","rangeMin","rangeMax","flipMin","flipMax"
-      ].forEach(id => document.getElementById(id).value = "");
-
+      movementMatchedIds = null;
+      ["q", "tagSearch", "playerFilter", "opponentFilter", "startMin", "startMax", "endMin", "endMax", "volMin", "volMax", "rangeMin", "rangeMax", "flipMin", "flipMax", "moveCents", "moveMinutes"].forEach(id => document.getElementById(id).value = "");
+      document.getElementById("moveDirection").value = "any";
+      document.getElementById("firstSetMargin").value = "";
+      document.getElementById("moveStatus").textContent = "Loads CSVs only when you click Run.";
+      document.getElementById("movePill").textContent = "No movement filter";
       renderQuickFilters();
       renderTags();
       applyFilters();
     }
 
-    function render(){
-      document.getElementById("status").textContent =
-        filtered.length.toLocaleString() + " of " + data.length.toLocaleString() + " datasets";
-
-      document.getElementById("countPill").textContent =
-        filtered.length.toLocaleString() + " matching datasets";
-
-      document.getElementById("activePill").textContent =
-        activeTags.size + " active tags";
-
-      const mode = document.getElementById("view").value;
-
-      document.getElementById("cards").classList.toggle("hidden",mode !== "cards");
-      document.getElementById("tablewrap").classList.toggle("hidden",mode !== "table");
-
-      if(mode === "cards"){
-        renderCards();
-      }else{
-        renderTable();
-      }
+    function clearMovementFilter() {
+      movementMatchedIds = null;
+      document.getElementById("moveStatus").textContent = "Movement filter cleared.";
+      document.getElementById("movePill").textContent = "No movement filter";
+      applyFilters();
     }
 
-    function fileLinks(record){
-      const files = filesOf(record);
+    async function csvText(record) {
+      const file = filesOf(record).csv;
+      if (!file) throw new Error("No CSV path");
+      const res = await fetch(enc(file));
+      if (!res.ok) throw new Error("CSV fetch failed: " + file);
+      return await res.text();
+    }
 
+    function seriesFromCsvText(text) {
+      const rows = parseCsv(text);
+      if (rows.length < 2) return [];
+      const headers = rows[0].map(h => String(h || "").toLowerCase().trim());
+      const timeIdx = headers.findIndex(h => h.includes("timestamp") || h === "time" || h === "date");
+      let priceIdx = headers.findIndex(h => h === "player_price");
+      if (priceIdx < 0) priceIdx = headers.findIndex(h => h.includes("player") && h.includes("price"));
+      if (priceIdx < 0) priceIdx = headers.findIndex((h, i) => i !== timeIdx && h.includes("price"));
+      if (priceIdx < 0) priceIdx = 1;
+      return rows.slice(1).map((row, i) => {
+        const rawTime = timeIdx >= 0 ? row[timeIdx] : "";
+        const parsed = rawTime ? Date.parse(rawTime) : NaN;
+        const minutes = Number.isFinite(parsed) ? parsed / 60000 : i;
+        const price = Number(row[priceIdx]);
+        return { t: minutes, p: price };
+      }).filter(x => Number.isFinite(x.t) && Number.isFinite(x.p));
+    }
+
+    function movedWithin(series, cents, minutes, direction) {
+      if (series.length < 2) return false;
+      let j = 0;
+      for (let i = 0; i < series.length; i++) {
+        if (j < i + 1) j = i + 1;
+        while (j < series.length && series[j].t - series[i].t <= minutes) {
+          const move = series[j].p - series[i].p;
+          if (direction === "up" && move >= cents) return true;
+          if (direction === "down" && move <= -cents) return true;
+          if (direction === "any" && Math.abs(move) >= cents) return true;
+          j++;
+        }
+      }
+      return false;
+    }
+
+    async function runMovementFilter() {
+      const cents = num(document.getElementById("moveCents").value);
+      const minutes = num(document.getElementById("moveMinutes").value);
+      const direction = document.getElementById("moveDirection").value;
+      if (!cents || !minutes) { alert("Enter move cents and minutes first."); return; }
+
+      const candidates = data.filter(record => basePass(record, false));
+      const matched = new Set();
+      document.getElementById("moveStatus").textContent = "Scanning " + candidates.length.toLocaleString() + " CSVs…";
+
+      for (let i = 0; i < candidates.length; i++) {
+        const record = candidates[i];
+        try {
+          const series = seriesFromCsvText(await csvText(record));
+          if (movedWithin(series, cents, minutes, direction)) matched.add(record.id);
+        } catch (error) {}
+        if (i % 25 === 0) {
+          document.getElementById("moveStatus").textContent = "Scanned " + i.toLocaleString() + " / " + candidates.length.toLocaleString() + " | matches " + matched.size.toLocaleString();
+          await new Promise(r => setTimeout(r, 10));
+        }
+      }
+
+      movementMatchedIds = matched;
+      document.getElementById("moveStatus").textContent = "Done. Movement matches: " + matched.size.toLocaleString();
+      document.getElementById("movePill").textContent = "Move " + cents + "c in " + minutes + "m: " + matched.size.toLocaleString();
+      applyFilters();
+    }
+
+    function render() {
+      document.getElementById("status").textContent = filtered.length.toLocaleString() + " of " + data.length.toLocaleString() + " datasets";
+      document.getElementById("countPill").textContent = filtered.length.toLocaleString() + " matching datasets";
+      document.getElementById("activePill").textContent = activeTags.size + " active tags";
+      const mode = document.getElementById("view").value;
+      document.getElementById("cards").classList.toggle("hidden", mode !== "cards");
+      document.getElementById("charts").classList.toggle("hidden", mode !== "charts");
+      document.getElementById("tablewrap").classList.toggle("hidden", mode !== "table");
+      if (mode === "cards") renderCards();
+      if (mode === "charts") renderCharts();
+      if (mode === "table") renderTable();
+    }
+
+    function fileLinks(record) {
+      const files = filesOf(record);
       return `
-        ${files.csv ? `<a href="${encodePath(files.csv)}">CSV</a>` : ""}
-        ${files.json ? `<a href="${encodePath(files.json)}">JSON</a>` : ""}
-        ${files.npy ? `<a href="${encodePath(files.npy)}">NPY</a>` : ""}
-        ${files.png ? `<a href="${encodePath(files.png)}">PNG</a>` : ""}
+        ${files.csv ? `<a href="${enc(files.csv)}">CSV</a>` : ""}
+        ${files.json ? `<a href="${enc(files.json)}">JSON</a>` : ""}
+        ${files.npy ? `<a href="${enc(files.npy)}">NPY</a>` : ""}
+        <button class="linkbtn" onclick="openBestPng('${esc(record.id)}')">PNG</button>
       `;
     }
 
-    function cardBadges(record){
-      const tags = tagList(record);
-
-      const winLoss = tags.includes("winner")
-        ? "winner"
-        : tags.includes("loser")
-          ? "loser"
-          : "";
-
-      const role = [
-        "heavy_favorite","favorite","slight_favorite",
-        "slight_underdog","underdog","heavy_underdog"
-      ].find(tag => tags.includes(tag)) || "";
-
-      const sets = tags.includes("3_sets")
-        ? "3 sets"
-        : tags.includes("2_sets")
-          ? "2 sets"
-          : "";
-
+    function cardBadges(record) {
+      const tags = allRecordTags(record);
+      const winLoss = tags.includes("winner") ? "winner" : tags.includes("loser") ? "loser" : "";
+      const role = ["heavy_favorite", "favorite", "slight_favorite", "slight_underdog", "underdog", "heavy_underdog"].find(tag => tags.includes(tag)) || "";
+      const sets = tags.includes("3_sets") ? "3 sets" : tags.includes("2_sets") ? "2 sets" : "";
       return `
         ${winLoss ? `<span class="badge ${winLoss === "winner" ? "win" : "loss"}">${winLoss}</span>` : ""}
-        ${role ? `<span class="badge">${compactTag(role)}</span>` : ""}
+        ${role ? `<span class="badge">${compact(role)}</span>` : ""}
         ${sets ? `<span class="badge">${sets}</span>` : ""}
       `;
     }
 
-    function renderCards(){
+    function renderCards() {
       const box = document.getElementById("cards");
       box.innerHTML = "";
-
-      filtered.slice(0,800).forEach(record => {
-        const tags = tagList(record);
+      filtered.slice(0, 800).forEach(record => {
+        const tags = allRecordTags(record).filter(t => !isPlayerOpponentTag(t));
         const div = document.createElement("div");
-
         div.className = "card";
         div.onclick = () => openModal(record);
-
         div.innerHTML = `
-          <div class="card-top">
-            <span class="id">${record.id || ""}</span>
-            <span class="badges">${cardBadges(record)}</span>
-          </div>
-
-          <div class="name">${record.player_name || ""}</div>
-          <div class="opp">vs ${record.opponent_name || ""}</div>
-
+          <div class="card-top"><span class="id">${esc(record.id || "")}</span><span class="badges">${cardBadges(record)}</span></div>
+          <div class="name">${esc(record.player_name || "")}</div>
+          <div class="opp">vs ${esc(record.opponent_name || "")}</div>
           <div class="metrics">
             <div class="metric"><b>${displayNumber(record.starting_price)}</b><span>start</span></div>
             <div class="metric"><b>${displayNumber(record.ending_price)}</b><span>end</span></div>
-            <div class="metric"><b>${displayNumber(metric(record,"volatility_score"))}</b><span>vol</span></div>
-            <div class="metric"><b>${displayNumber(metric(record,"range_points"))}</b><span>range</span></div>
+            <div class="metric"><b>${displayNumber(metric(record, "volatility_score"))}</b><span>vol</span></div>
+            <div class="metric"><b>${displayNumber(metric(record, "range_points"))}</b><span>range</span></div>
           </div>
-
-          <div class="filelinks" onclick="event.stopPropagation()">
-            ${fileLinks(record)}
-          </div>
-
-          <div class="tagsline">
-            ${tags.slice(0,22).join(" · ")}
-          </div>
+          <div class="filelinks" onclick="event.stopPropagation()">${fileLinks(record)}</div>
+          <div class="tagsline">${esc(tags.slice(0, 26).join(" · "))}</div>
         `;
-
         box.appendChild(div);
       });
-
-      if(filtered.length > 800){
+      if (filtered.length > 800) {
         const div = document.createElement("div");
         div.className = "card";
-        div.innerHTML = `
-          <b>Showing first 800 cards.</b>
-          <br>
-          <span class="small">Narrow filters to view more.</span>
-        `;
+        div.innerHTML = `<b>Showing first 800 cards.</b><br><span class="small">Narrow filters to view more.</span>`;
         box.appendChild(div);
       }
     }
 
-    function renderTable(){
+    function renderCharts() {
+      const box = document.getElementById("charts");
+      box.innerHTML = "";
+      filtered.slice(0, 400).forEach(record => {
+        const candidates = pngCandidates(record).map(enc);
+        const first = candidates[0] || "";
+        const div = document.createElement("div");
+        div.className = "chart-card";
+        div.onclick = () => openModal(record);
+        div.innerHTML = `
+          <div class="card-top"><span class="id">${esc(record.id || "")}</span><span class="badges">${cardBadges(record)}</span></div>
+          <div class="name">${esc(record.player_name || "")}</div>
+          <div class="opp">vs ${esc(record.opponent_name || "")}</div>
+          <div class="thumb">${first ? `<img loading="lazy" src="${first}" data-candidates="${encodeURIComponent(JSON.stringify(candidates))}" data-idx="0" onerror="nextPngCandidate(this)" />` : `<span class="small">No PNG path</span>`}</div>
+          <div class="filelinks" onclick="event.stopPropagation()">${fileLinks(record)}</div>
+        `;
+        box.appendChild(div);
+      });
+      if (filtered.length > 400) {
+        const div = document.createElement("div");
+        div.className = "chart-card";
+        div.innerHTML = `<b>Showing first 400 charts.</b><br><span class="small">Narrow filters to view more.</span>`;
+        box.appendChild(div);
+      }
+    }
+
+    function nextPngCandidate(img) {
+      let candidates = [];
+      try { candidates = JSON.parse(decodeURIComponent(img.dataset.candidates || "[]")); } catch (e) { candidates = []; }
+      const idx = Number(img.dataset.idx || 0) + 1;
+      if (idx < candidates.length) { img.dataset.idx = String(idx); img.src = candidates[idx]; }
+      else img.outerHTML = `<span class="small">PNG not found</span>`;
+    }
+
+    function imageExists(url) {
+      return new Promise(resolve => {
+        const im = new Image();
+        im.onload = () => resolve(true);
+        im.onerror = () => resolve(false);
+        im.src = url;
+      });
+    }
+
+    async function openBestPng(id) {
+      const record = data.find(r => String(r.id) === String(id));
+      if (!record) { alert("Record not found."); return; }
+      for (const path of pngCandidates(record)) {
+        const url = enc(path);
+        if (await imageExists(url)) { window.open(url, "_blank"); return; }
+      }
+      alert("PNG not found for " + id + ". The chart may not have been generated or committed.");
+    }
+
+    function renderTable() {
       const tbody = document.getElementById("tbody");
       tbody.innerHTML = "";
-
-      filtered.slice(0,1500).forEach(record => {
+      filtered.slice(0, 1500).forEach(record => {
         const tr = document.createElement("tr");
         tr.onclick = () => openModal(record);
-
         tr.innerHTML = `
-          <td>${record.id || ""}</td>
-          <td>${record.player_name || ""}</td>
-          <td>${record.opponent_name || ""}</td>
+          <td>${esc(record.id || "")}</td>
+          <td>${esc(record.player_name || "")}</td>
+          <td>${esc(record.opponent_name || "")}</td>
           <td>${displayNumber(record.starting_price)}</td>
           <td>${displayNumber(record.ending_price)}</td>
-          <td>${displayNumber(metric(record,"volatility_score"))}</td>
-          <td>${displayNumber(metric(record,"range_points"))}</td>
-          <td>${displayNumber(metric(record,"direction_flips"))}</td>
+          <td>${displayNumber(metric(record, "volatility_score"))}</td>
+          <td>${displayNumber(metric(record, "range_points"))}</td>
+          <td>${displayNumber(metric(record, "direction_flips"))}</td>
           <td onclick="event.stopPropagation()">${fileLinks(record)}</td>
-          <td>${tagList(record).slice(0,35).join(" · ")}</td>
+          <td>${esc(allRecordTags(record).filter(t => !isPlayerOpponentTag(t)).slice(0, 35).join(" · "))}</td>
         `;
-
         tbody.appendChild(tr);
       });
     }
 
-    async function openModal(record){
-      const files = filesOf(record);
-      const tags = tagList(record);
+    async function openModal(record) {
+      currentModalRecord = record;
+      similarResults = [];
+      document.getElementById("similarList").innerHTML = "";
+      document.getElementById("similarChart").innerHTML = "";
+      document.getElementById("similarStatus").textContent = "Uses CSV price paths. This can take time across 8,758 files.";
 
-      document.getElementById("modalTitle").textContent =
-        (record.id || "") + " — " + (record.player_name || "") + " vs " + (record.opponent_name || "");
-
+      const tags = allRecordTags(record).filter(t => !isPlayerOpponentTag(t));
+      const candidates = pngCandidates(record).map(enc);
+      const first = candidates[0] || "";
+      document.getElementById("modalTitle").textContent = (record.id || "") + " — " + (record.player_name || "") + " vs " + (record.opponent_name || "");
       document.getElementById("modalFiles").innerHTML = fileLinks(record);
-
-      document.getElementById("modalTags").innerHTML = tags
-        .map(tag => `<span class="tag readonly">${tag}</span>`)
-        .join("");
-
-      document.getElementById("modalMeta").textContent = JSON.stringify(record,null,2);
-
-      document.getElementById("chartPreview").innerHTML = files.png
-        ? `<img src="${encodePath(files.png)}" alt="${record.id || ""}" onerror="this.outerHTML='<div class=&quot;small&quot;>PNG not found or not generated yet.</div>'">`
-        : `<div class="small">No PNG path found for this record.</div>`;
-
+      document.getElementById("modalTags").innerHTML = tags.map(tag => `<span class="tag readonly">${esc(tag)}</span>`).join("");
+      document.getElementById("modalMeta").textContent = JSON.stringify(record, null, 2);
+      document.getElementById("chartPreview").innerHTML = first ? `<img src="${first}" data-candidates="${encodeURIComponent(JSON.stringify(candidates))}" data-idx="0" onerror="nextPngCandidate(this)" />` : `<div class="small">No PNG path found for this record.</div>`;
       document.getElementById("csvPreview").textContent = "Loading CSV preview…";
       document.getElementById("modal").classList.add("open");
 
-      if(files.csv){
-        try{
-          const response = await fetch(encodePath(files.csv));
-          const text = await response.text();
-
-          document.getElementById("csvPreview").textContent =
-            text.split(/\r?\n/).slice(0,18).join("\n");
-        }catch(error){
-          document.getElementById("csvPreview").textContent = "Could not load CSV preview.";
-        }
-      }else{
-        document.getElementById("csvPreview").textContent = "No CSV file path.";
+      try {
+        const text = await csvText(record);
+        document.getElementById("csvPreview").textContent = text.split(/\r?\n/).slice(0, 18).join("\n");
+      } catch (error) {
+        document.getElementById("csvPreview").textContent = "Could not load CSV preview.";
       }
     }
 
-    function closeModal(event){
-      if(event && event.target.id !== "modal"){
-        return;
+    function closeModal(event) {
+      if (event && event.target.id !== "modal") return;
+      document.getElementById("modal").classList.remove("open");
+    }
+
+    function rawPriceSeries(text) {
+      return seriesFromCsvText(text).map(x => x.p).filter(x => Number.isFinite(x));
+    }
+
+    function resample(values, n) {
+      if (!values.length) return [];
+      if (values.length === 1) return Array(n).fill(values[0]);
+      const out = [];
+      for (let i = 0; i < n; i++) {
+        const pos = (i * (values.length - 1)) / (n - 1);
+        const lo = Math.floor(pos);
+        const hi = Math.ceil(pos);
+        const frac = pos - lo;
+        out.push(values[lo] * (1 - frac) + values[hi] * frac);
+      }
+      return out;
+    }
+
+    function pearson(a, b) {
+      const n = Math.min(a.length, b.length);
+      if (n < 4) return -999;
+      let ma = 0, mb = 0;
+      for (let i = 0; i < n; i++) { ma += a[i]; mb += b[i]; }
+      ma /= n; mb /= n;
+      let numerator = 0, da = 0, db = 0;
+      for (let i = 0; i < n; i++) {
+        const x = a[i] - ma;
+        const y = b[i] - mb;
+        numerator += x * y;
+        da += x * x;
+        db += y * y;
+      }
+      if (!da || !db) return -999;
+      return numerator / Math.sqrt(da * db);
+    }
+
+    async function normalizedSeries(record) {
+      if (similarSeriesCache.has(record.id)) return similarSeriesCache.get(record.id);
+      const values = rawPriceSeries(await csvText(record));
+      const out = resample(values, 90);
+      similarSeriesCache.set(record.id, out);
+      return out;
+    }
+
+    async function findSimilarFromModal() {
+      if (!currentModalRecord) return;
+      const useFiltered = document.getElementById("similarUseFiltered").checked;
+      const lib = useFiltered ? filtered : data;
+      document.getElementById("similarStatus").textContent = "Loading target series…";
+
+      let target;
+      try { target = await normalizedSeries(currentModalRecord); }
+      catch (error) { document.getElementById("similarStatus").textContent = "Could not load target CSV."; return; }
+
+      similarResults = [];
+      for (let i = 0; i < lib.length; i++) {
+        const record = lib[i];
+        if (record.id === currentModalRecord.id) continue;
+        try {
+          const series = await normalizedSeries(record);
+          const corr = pearson(target, series);
+          if (corr > -2) similarResults.push({ record, corr, selected: similarResults.length < 10, series });
+        } catch (error) {}
+        if (i % 25 === 0) {
+          document.getElementById("similarStatus").textContent = "Compared " + i.toLocaleString() + " / " + lib.length.toLocaleString() + " | found " + similarResults.length.toLocaleString();
+          await new Promise(r => setTimeout(r, 10));
+        }
+      }
+      similarResults.sort((a, b) => b.corr - a.corr);
+      similarResults = similarResults.slice(0, 50);
+      similarResults.forEach((x, i) => x.selected = i < 8);
+      document.getElementById("similarStatus").textContent = "Top " + similarResults.length + " similar patterns. Check boxes to overlay.";
+      renderSimilarList();
+      renderSimilarChart();
+    }
+
+    function renderSimilarList() {
+      const box = document.getElementById("similarList");
+      box.innerHTML = similarResults.map((item, idx) => `
+        <label class="sim-row">
+          <input type="checkbox" ${item.selected ? "checked" : ""} onchange="toggleSimilar(${idx}, this.checked)" />
+          <span>${esc(item.record.id)}</span>
+          <span>${(item.corr * 100).toFixed(1)}%</span>
+          <span>${esc(item.record.player_name || "")}</span>
+        </label>
+      `).join("");
+    }
+
+    function toggleSimilar(idx, checked) {
+      if (similarResults[idx]) similarResults[idx].selected = checked;
+      renderSimilarChart();
+    }
+
+    function renderSimilarChart() {
+      const svg = document.getElementById("similarChart");
+      const w = svg.clientWidth || 700;
+      const h = svg.clientHeight || 260;
+      const pad = 18;
+      svg.setAttribute("viewBox", "0 0 " + w + " " + h);
+      svg.innerHTML = "";
+
+      const selected = similarResults.filter(x => x.selected).slice(0, 20);
+      const base = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      base.setAttribute("x", 0);
+      base.setAttribute("y", 0);
+      base.setAttribute("width", w);
+      base.setAttribute("height", h);
+      base.setAttribute("fill", "#020617");
+      svg.appendChild(base);
+
+      function pathFor(values) {
+        if (!values.length) return "";
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const span = max - min || 1;
+        return values.map((v, i) => {
+          const x = pad + (i * (w - pad * 2)) / (values.length - 1);
+          const y = h - pad - ((v - min) / span) * (h - pad * 2);
+          return (i ? "L" : "M") + x.toFixed(1) + "," + y.toFixed(1);
+        }).join(" ");
       }
 
-      document.getElementById("modal").classList.remove("open");
+      selected.forEach((item, idx) => {
+        const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        p.setAttribute("d", pathFor(item.series));
+        p.setAttribute("fill", "none");
+        p.setAttribute("stroke", idx === 0 ? "#fbbf24" : "#60a5fa");
+        p.setAttribute("stroke-width", idx === 0 ? "2.6" : "1.35");
+        p.setAttribute("opacity", idx === 0 ? "1" : "0.45");
+        svg.appendChild(p);
+      });
     }
 
     loadData();
