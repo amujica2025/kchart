@@ -1,208 +1,1092 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>KChart Player Dataset Gallery</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>KChart Viewer</title>
+
   <style>
-    body { margin:0; background:#0d1117; color:#e5e7eb; font-family:Arial, sans-serif; }
-    header { position:sticky; top:0; z-index:10; background:#111827; border-bottom:1px solid #374151; padding:12px; }
-    input, select, button { background:#0d1117; color:#e5e7eb; border:1px solid #374151; border-radius:6px; padding:7px; margin:3px; }
-    button { cursor:pointer; }
-    .stats { color:#9ca3af; font-size:13px; margin-top:6px; }
-    .wrap { display:grid; grid-template-columns: 330px 1fr; min-height:100vh; }
-    aside { border-right:1px solid #374151; padding:12px; overflow:auto; max-height:calc(100vh - 70px); position:sticky; top:70px; }
-    main { padding:12px; }
-    .tag { display:inline-block; padding:4px 7px; margin:3px; border:1px solid #374151; border-radius:999px; font-size:12px; color:#cbd5e1; cursor:pointer; }
-    .tag.active { background:#2563eb; color:white; }
-    table { width:100%; border-collapse:collapse; font-size:13px; }
-    th, td { border-bottom:1px solid #1f2937; padding:6px; text-align:left; vertical-align:top; }
-    th { position:sticky; top:70px; background:#111827; cursor:pointer; }
-    tr:hover { background:#111827; }
-    a { color:#93c5fd; text-decoration:none; }
-    .tags-cell { max-width:450px; color:#9ca3af; }
+    :root{
+      --bg:#0b1020;
+      --head:#0b1224;
+      --panel:#111827;
+      --panel2:#0f172a;
+      --deep:#020617;
+      --line:#243244;
+      --line2:#334155;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --blue:#60a5fa;
+      --blue2:#1d4ed8;
+      --green:#86efac;
+      --red:#fda4af;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font:13px/1.35 Arial,Helvetica,sans-serif;
+    }
+
+    a{color:var(--blue);text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    button,input,select{
+      background:var(--deep);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:8px;
+      padding:8px 10px;
+      font:inherit;
+    }
+
+    button{cursor:pointer}
+    button:hover,input:hover,select:hover{border-color:var(--blue)}
+    button.active{background:var(--blue2);border-color:var(--blue)}
+
+    header{
+      position:sticky;
+      top:0;
+      z-index:20;
+      display:grid;
+      gap:8px;
+      padding:10px 12px;
+      background:var(--head);
+      border-bottom:1px solid var(--line);
+    }
+
+    h1{font-size:18px;margin:0}
+    .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+    .status{color:var(--muted)}
+    .search{min-width:min(520px,100%);flex:1}
+
+    .layout{
+      display:grid;
+      grid-template-columns:320px 1fr;
+      min-height:calc(100vh - 98px);
+    }
+
+    aside{
+      position:sticky;
+      top:98px;
+      height:calc(100vh - 98px);
+      overflow:auto;
+      padding:12px;
+      border-right:1px solid var(--line);
+      background:#0c1325;
+    }
+
+    main{padding:12px;overflow:hidden}
+
+    .section{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px;
+      margin-bottom:10px;
+    }
+
+    .section h3{
+      margin:0 0 8px;
+      color:#cbd5e1;
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
+
+    .quick{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:6px;
+    }
+
+    .quick button{
+      text-align:left;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .range-row{
+      display:grid;
+      grid-template-columns:55px 1fr 1fr;
+      gap:6px;
+      align-items:center;
+      margin:6px 0;
+    }
+
+    .small{font-size:11px;color:var(--muted)}
+    .tag-search{width:100%;margin-bottom:8px}
+
+    .tagbox{
+      display:flex;
+      flex-wrap:wrap;
+      gap:5px;
+      max-height:275px;
+      overflow:auto;
+    }
+
+    .tag{
+      display:inline-flex;
+      max-width:100%;
+      padding:4px 7px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:var(--deep);
+      color:#cbd5e1;
+      cursor:pointer;
+      font-size:11px;
+      white-space:nowrap;
+    }
+
+    .tag.active{
+      background:var(--blue2);
+      border-color:var(--blue);
+      color:white;
+    }
+
+    .tag.readonly{cursor:default}
+
+    .summary{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      gap:8px;
+      margin-bottom:10px;
+    }
+
+    .pill{
+      display:inline-flex;
+      padding:4px 8px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:var(--panel);
+      color:#cbd5e1;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(285px,1fr));
+      gap:10px;
+    }
+
+    .card{
+      min-height:170px;
+      padding:10px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:var(--panel);
+      cursor:pointer;
+    }
+
+    .card:hover{
+      border-color:var(--line2);
+      transform:translateY(-1px);
+    }
+
+    .card-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:8px;
+      margin-bottom:5px;
+    }
+
+    .id{
+      color:white;
+      font-weight:700;
+      letter-spacing:.03em;
+    }
+
+    .badges{
+      display:flex;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+      gap:5px;
+    }
+
+    .badge{
+      padding:2px 6px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      color:#cbd5e1;
+      font-size:11px;
+      white-space:nowrap;
+    }
+
+    .badge.win{background:var(--green);border-color:var(--green);color:#052e16}
+    .badge.loss{background:var(--red);border-color:var(--red);color:#450a0a}
+
+    .name{
+      margin-bottom:2px;
+      font-size:14px;
+      font-weight:700;
+    }
+
+    .opp{
+      margin-bottom:8px;
+      color:var(--muted);
+    }
+
+    .metrics{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:6px;
+      margin:8px 0;
+    }
+
+    .metric{
+      background:var(--deep);
+      border:1px solid #1e293b;
+      border-radius:8px;
+      padding:6px 4px;
+      text-align:center;
+    }
+
+    .metric b{
+      display:block;
+      color:white;
+      font-size:14px;
+    }
+
+    .metric span{
+      color:var(--muted);
+      font-size:10px;
+      text-transform:uppercase;
+    }
+
+    .filelinks{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:8px;
+    }
+
+    .tagsline{
+      max-height:42px;
+      overflow:hidden;
+      margin-top:8px;
+      color:var(--muted);
+      font-size:11px;
+    }
+
+    .tablewrap{
+      overflow:auto;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:var(--panel);
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:12px;
+    }
+
+    th,td{
+      padding:7px;
+      border-bottom:1px solid #1e293b;
+      text-align:left;
+      vertical-align:top;
+    }
+
+    th{
+      position:sticky;
+      top:0;
+      z-index:2;
+      background:var(--panel);
+      color:#cbd5e1;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    tr:hover{background:var(--panel2)}
+    .hidden{display:none!important}
+
+    .modal{
+      position:fixed;
+      inset:0;
+      z-index:50;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background:rgba(0,0,0,.75);
+    }
+
+    .modal.open{display:flex}
+
+    .modalbox{
+      width:min(1180px,96vw);
+      height:min(860px,94vh);
+      display:grid;
+      grid-template-rows:auto 1fr;
+      overflow:hidden;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:var(--bg);
+      box-shadow:0 18px 60px rgba(0,0,0,.35);
+    }
+
+    .modalhead{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:10px 12px;
+      border-bottom:1px solid var(--line);
+      background:var(--panel);
+    }
+
+    .modalbody{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      overflow:auto;
+      padding:12px;
+    }
+
+    .preview,pre{
+      background:var(--deep);
+      border:1px solid #1e293b;
+      border-radius:10px;
+      padding:10px;
+    }
+
+    .preview img{
+      max-width:100%;
+      border:1px solid var(--line);
+      border-radius:8px;
+    }
+
+    pre{
+      white-space:pre-wrap;
+      max-height:380px;
+      overflow:auto;
+      color:#cbd5e1;
+    }
+
+    .error{
+      padding:14px;
+      border:1px solid #7f1d1d;
+      border-radius:10px;
+      background:#450a0a;
+      color:#fecaca;
+    }
+
+    @media(max-width:900px){
+      .layout{grid-template-columns:1fr}
+      aside{position:relative;top:0;height:auto}
+      .modalbody{grid-template-columns:1fr}
+      .search{min-width:100%}
+    }
   </style>
 </head>
+
 <body>
-<header>
-  <strong>KChart Player Dataset Gallery</strong>
-  <input id="q" placeholder="Search player, id, workbook, tag..." oninput="applyFilters()">
-  <select id="winnerFilter" onchange="applyFilters()">
-    <option value="">winner/loser</option>
-    <option value="winner">winner</option>
-    <option value="loser">loser</option>
-  </select>
-  <select id="sideFilter" onchange="applyFilters()">
-    <option value="">favorite/underdog</option>
-    <option value="heavy_favorite">heavy favorite</option>
-    <option value="favorite">favorite</option>
-    <option value="slight_favorite">slight favorite</option>
-    <option value="slight_underdog">slight underdog</option>
-    <option value="underdog">underdog</option>
-    <option value="heavy_underdog">heavy underdog</option>
-  </select>
-  <select id="setsFilter" onchange="applyFilters()">
-    <option value="">sets</option>
-    <option value="2_sets">2 sets</option>
-    <option value="3_sets">3 sets</option>
-  </select>
-  <button onclick="clearFilters()">Clear</button>
-  <a href="master_player_manifest.csv">manifest.csv</a>
-  <a href="master_player_index.json">index.json</a>
-  <a href="KCHART_DATA_INSTRUCTIONS.md">instructions</a>
-  <div class="stats" id="stats"></div>
-</header>
+  <header>
+    <div class="row">
+      <h1>KChart Viewer</h1>
+      <span class="status" id="status">Loading…</span>
+    </div>
 
-<div class="wrap">
-  <aside>
-    <h3>Tags</h3>
-    <div id="tagBox"></div>
-  </aside>
-  <main>
-    <table id="tbl">
-      <thead>
-        <tr>
-          <th onclick="sortBy('id')">id</th>
-          <th onclick="sortBy('player_name')">player</th>
-          <th onclick="sortBy('opponent_name')">opponent</th>
-          <th onclick="sortByNum('starting_price')">start</th>
-          <th onclick="sortByNum('ending_price')">end</th>
-          <th onclick="sortByNum('volatility_score')">vol</th>
-          <th onclick="sortByNum('range_points')">range</th>
-          <th>files</th>
-          <th>tags</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </main>
-</div>
+    <div class="row">
+      <input id="q" class="search" placeholder="Search id, player, opponent, workbook, tag…" oninput="applyFilters()">
 
-<script>
-let data = [];
-let tags = [];
-let activeTags = new Set();
-let filtered = [];
-let sortKey = "id";
-let sortAsc = true;
+      <select id="sort" onchange="applyFilters()">
+        <option value="id">Sort: ID</option>
+        <option value="starting_price">Sort: Starting price</option>
+        <option value="ending_price">Sort: Ending price</option>
+        <option value="volatility_score">Sort: Volatility</option>
+        <option value="range_points">Sort: Range</option>
+        <option value="direction_flips">Sort: Direction flips</option>
+        <option value="max_single_move">Sort: Max move</option>
+        <option value="row_count">Sort: Rows</option>
+        <option value="player_name">Sort: Player</option>
+        <option value="opponent_name">Sort: Opponent</option>
+      </select>
 
-async function load() {
-  data = await (await fetch("gallery_data.json")).json();
-  tags = await (await fetch("gallery_tags.json")).json();
-  renderTags();
-  applyFilters();
-}
+      <select id="dir" onchange="applyFilters()">
+        <option value="asc">Asc</option>
+        <option value="desc">Desc</option>
+      </select>
 
-function renderTags() {
-  const box = document.getElementById("tagBox");
-  box.innerHTML = "";
-  for (const t of tags) {
-    const span = document.createElement("span");
-    span.className = "tag";
-    span.textContent = t;
-    span.onclick = () => {
-      if (activeTags.has(t)) activeTags.delete(t);
-      else activeTags.add(t);
-      span.classList.toggle("active");
-      applyFilters();
-    };
-    box.appendChild(span);
-  }
-}
+      <select id="view" onchange="render()">
+        <option value="cards">Cards</option>
+        <option value="table">Table</option>
+      </select>
 
-function rowTags(r) {
-  return String(r.tags || "").split("|").filter(Boolean);
-}
+      <button onclick="clearFilters()">Clear</button>
 
-function hasTag(r, t) {
-  return rowTags(r).includes(t);
-}
+      <a href="master_player_index.json">master index</a>
+      <a href="master_player_manifest.csv">manifest csv</a>
+      <a href="KCHART_DATA_INSTRUCTIONS.md">instructions</a>
+    </div>
+  </header>
 
-function applyFilters() {
-  const q = document.getElementById("q").value.toLowerCase().trim();
-  const wf = document.getElementById("winnerFilter").value;
-  const sf = document.getElementById("sideFilter").value;
-  const setf = document.getElementById("setsFilter").value;
+  <div class="layout">
+    <aside>
+      <div class="section">
+        <h3>Quick filters</h3>
+        <div class="quick" id="quickFilters"></div>
+      </div>
 
-  filtered = data.filter(r => {
-    const all = JSON.stringify(r).toLowerCase();
-    if (q && !all.includes(q)) return false;
-    if (wf && !hasTag(r, wf)) return false;
-    if (sf && !hasTag(r, sf)) return false;
-    if (setf && !hasTag(r, setf)) return false;
-    for (const t of activeTags) {
-      if (!hasTag(r, t)) return false;
+      <div class="section">
+        <h3>Numeric filters</h3>
+
+        <div class="range-row">
+          <span class="small">Start</span>
+          <input id="startMin" type="number" placeholder="min" oninput="applyFilters()">
+          <input id="startMax" type="number" placeholder="max" oninput="applyFilters()">
+        </div>
+
+        <div class="range-row">
+          <span class="small">End</span>
+          <input id="endMin" type="number" placeholder="min" oninput="applyFilters()">
+          <input id="endMax" type="number" placeholder="max" oninput="applyFilters()">
+        </div>
+
+        <div class="range-row">
+          <span class="small">Vol</span>
+          <input id="volMin" type="number" placeholder="min" oninput="applyFilters()">
+          <input id="volMax" type="number" placeholder="max" oninput="applyFilters()">
+        </div>
+
+        <div class="range-row">
+          <span class="small">Range</span>
+          <input id="rangeMin" type="number" placeholder="min" oninput="applyFilters()">
+          <input id="rangeMax" type="number" placeholder="max" oninput="applyFilters()">
+        </div>
+
+        <div class="range-row">
+          <span class="small">Flips</span>
+          <input id="flipMin" type="number" placeholder="min" oninput="applyFilters()">
+          <input id="flipMax" type="number" placeholder="max" oninput="applyFilters()">
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>All tags</h3>
+        <input id="tagSearch" class="tag-search" placeholder="Filter tags…" oninput="renderTags()">
+        <div class="tagbox" id="tags"></div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="summary">
+        <span class="pill" id="countPill">0 datasets</span>
+        <span class="pill" id="activePill">0 active tags</span>
+        <span class="pill">Read-only viewer</span>
+      </div>
+
+      <div class="grid" id="cards"></div>
+
+      <div class="tablewrap hidden" id="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="setSort('id')">ID</th>
+              <th onclick="setSort('player_name')">Player</th>
+              <th onclick="setSort('opponent_name')">Opponent</th>
+              <th onclick="setSort('starting_price')">Start</th>
+              <th onclick="setSort('ending_price')">End</th>
+              <th onclick="setSort('volatility_score')">Vol</th>
+              <th onclick="setSort('range_points')">Range</th>
+              <th onclick="setSort('direction_flips')">Flips</th>
+              <th>Files</th>
+              <th>Tags</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal" id="modal" onclick="closeModal(event)">
+    <div class="modalbox" onclick="event.stopPropagation()">
+      <div class="modalhead">
+        <strong id="modalTitle"></strong>
+        <button onclick="closeModal()">Close</button>
+      </div>
+
+      <div class="modalbody">
+        <div>
+          <div class="preview" id="chartPreview"></div>
+
+          <h3>Files</h3>
+          <div class="filelinks" id="modalFiles"></div>
+
+          <h3>Tags</h3>
+          <div class="tagbox" id="modalTags"></div>
+        </div>
+
+        <div>
+          <h3>Metadata</h3>
+          <pre id="modalMeta"></pre>
+
+          <h3>CSV preview</h3>
+          <pre id="csvPreview">Click a dataset to load CSV preview.</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let data = [];
+    let filtered = [];
+    let allTags = [];
+    let activeTags = new Set();
+
+    const quickTags = [
+      "winner","loser","heavy_favorite","favorite","slight_favorite",
+      "slight_underdog","underdog","heavy_underdog","2_sets","3_sets",
+      "straight_sets","three_set_match","tiebreaker","no_tiebreaker",
+      "very_high_volatility","high_volatility","medium_volatility","low_volatility",
+      "oscillating_shape","jagged_shape","smooth_trend_shape","uptrend_finish",
+      "downtrend_finish","v_shape_recovery","inverted_v_failed_spike",
+      "longshot_comeback_winner","favorite_collapse_loser","drawdown_recovery"
+    ];
+
+    function numberValue(value){
+      const x = Number(value);
+      return Number.isFinite(x) ? x : 0;
     }
-    return true;
-  });
 
-  doSort();
-  renderTable();
-}
+    function encodePath(path){
+      return path ? encodeURI(path) : "#";
+    }
 
-function clearFilters() {
-  document.getElementById("q").value = "";
-  document.getElementById("winnerFilter").value = "";
-  document.getElementById("sideFilter").value = "";
-  document.getElementById("setsFilter").value = "";
-  activeTags.clear();
-  for (const e of document.querySelectorAll(".tag")) e.classList.remove("active");
-  applyFilters();
-}
+    function compactTag(tag){
+      return String(tag || "").replaceAll("_"," ");
+    }
 
-function sortBy(k) {
-  sortKey = k;
-  sortAsc = !sortAsc;
-  doSort();
-  renderTable();
-}
+    function tagList(record){
+      if(Array.isArray(record.tags)){
+        return record.tags.map(String).filter(Boolean);
+      }
 
-function sortByNum(k) {
-  sortKey = k;
-  sortAsc = !sortAsc;
-  filtered.sort((a,b) => (Number(a[k]) || 0) - (Number(b[k]) || 0));
-  if (!sortAsc) filtered.reverse();
-  renderTable();
-}
+      if(typeof record.tags === "string"){
+        return record.tags.split(/[|,;]/).map(x => x.trim()).filter(Boolean);
+      }
 
-function doSort() {
-  filtered.sort((a,b) => String(a[sortKey] || "").localeCompare(String(b[sortKey] || "")));
-  if (!sortAsc) filtered.reverse();
-}
+      return [];
+    }
 
-function renderTable() {
-  document.getElementById("stats").textContent = `${filtered.length.toLocaleString()} of ${data.length.toLocaleString()} player datasets`;
-  const tbody = document.querySelector("#tbl tbody");
-  tbody.innerHTML = "";
+    function filesOf(record){
+      const id = record.id || record.dataset_id || "";
+      const files = record.files || {};
 
-  for (const r of filtered.slice(0, 1000)) {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${r.id || ""}</td>
-      <td>${r.player_name || ""}</td>
-      <td>${r.opponent_name || ""}</td>
-      <td>${r.starting_price || ""}</td>
-      <td>${r.ending_price || ""}</td>
-      <td>${r.volatility_score || ""}</td>
-      <td>${r.range_points || ""}</td>
-      <td>
-        <a href="${r.csv_file || "#"}">csv</a>
-        <a href="${r.json_file || "#"}">json</a>
-        <a href="${r.npy_file || "#"}">npy</a>
-        ${r.png_file ? `<a href="${r.png_file}">png</a>` : ""}
-      </td>
-      <td class="tags-cell">${r.tags || ""}</td>
-    `;
-    tbody.appendChild(tr);
-  }
+      return {
+        csv: files.csv || record.csv || record.csv_file || record.csv_path || (id ? "csvprice data/" + id + ".csv" : ""),
+        json: files.json || record.json || record.json_file || record.json_path || (id ? "json data/" + id + ".json" : ""),
+        npy: files.npy || record.npy || record.npy_file || record.npy_path || (id ? "npy data/" + id + ".npy" : ""),
+        png: files.png || record.png || record.png_file || record.png_path || (id ? "png charts/" + id + ".png" : "")
+      };
+    }
 
-  if (filtered.length > 1000) {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="9">Showing first 1,000 rows. Narrow filters to see more.</td>`;
-    tbody.appendChild(tr);
-  }
-}
+    function metric(record,key){
+      if(record.metrics && record.metrics[key] != null){
+        return record.metrics[key];
+      }
 
-load();
-</script>
+      if(record[key] != null){
+        return record[key];
+      }
+
+      return "";
+    }
+
+    function hasTag(record,tag){
+      return tagList(record).includes(tag);
+    }
+
+    function displayNumber(value){
+      if(value === "" || value == null){
+        return "";
+      }
+
+      const x = Number(value);
+
+      if(!Number.isFinite(x)){
+        return String(value);
+      }
+
+      return String(Math.round(x * 100) / 100);
+    }
+
+    function normalizeRecord(record){
+      const id = record.id || record.dataset_id || record.player_id || "";
+
+      return {
+        ...record,
+        id,
+        player_name: record.player_name || record.player || "",
+        opponent_name: record.opponent_name || record.opponent || "",
+        source_workbook: record.source_workbook || record.workbook || record.source_file || record.file || "",
+        starting_price: record.starting_price ?? record.start_price ?? record.open_price ?? "",
+        ending_price: record.ending_price ?? record.end_price ?? record.close_price ?? "",
+        row_count: record.row_count ?? record.rows ?? ""
+      };
+    }
+
+    function normalizeIndex(raw){
+      if(Array.isArray(raw)){
+        return raw.map(normalizeRecord);
+      }
+
+      const possibleArrays = [
+        raw.players,raw.records,raw.datasets,raw.items,raw.data,
+        raw.player_datasets,raw.index
+      ];
+
+      for(const item of possibleArrays){
+        if(Array.isArray(item)){
+          return item.map(normalizeRecord);
+        }
+      }
+
+      if(raw && typeof raw === "object"){
+        return Object.values(raw)
+          .filter(value => value && typeof value === "object")
+          .map(normalizeRecord);
+      }
+
+      return [];
+    }
+
+    function parseCsv(text){
+      const rows = [];
+      let row = [];
+      let cell = "";
+      let quote = false;
+
+      for(let i = 0; i < text.length; i++){
+        const ch = text[i];
+        const next = text[i + 1];
+
+        if(quote){
+          if(ch === '"' && next === '"'){
+            cell += '"';
+            i++;
+          }else if(ch === '"'){
+            quote = false;
+          }else{
+            cell += ch;
+          }
+        }else{
+          if(ch === '"'){
+            quote = true;
+          }else if(ch === ","){
+            row.push(cell);
+            cell = "";
+          }else if(ch === "\n"){
+            row.push(cell);
+            rows.push(row);
+            row = [];
+            cell = "";
+          }else if(ch !== "\r"){
+            cell += ch;
+          }
+        }
+      }
+
+      if(cell || row.length){
+        row.push(cell);
+        rows.push(row);
+      }
+
+      if(!rows.length){
+        return [];
+      }
+
+      const headers = rows[0].map(x => x.trim());
+
+      return rows.slice(1)
+        .filter(r => r.some(Boolean))
+        .map(r => {
+          const obj = {};
+          headers.forEach((h,i) => obj[h] = r[i] || "");
+          return normalizeRecord(obj);
+        });
+    }
+
+    async function loadData(){
+      try{
+        const response = await fetch("master_player_index.json",{cache:"no-store"});
+
+        if(response.ok){
+          const raw = await response.json();
+          data = normalizeIndex(raw);
+        }
+      }catch(error){
+        data = [];
+      }
+
+      if(!data.length){
+        try{
+          const response = await fetch("master_player_manifest.csv",{cache:"no-store"});
+
+          if(response.ok){
+            const text = await response.text();
+            data = parseCsv(text);
+          }
+        }catch(error){
+          data = [];
+        }
+      }
+
+      if(!data.length){
+        showLoadError();
+        return;
+      }
+
+      allTags = [...new Set(data.flatMap(tagList))].sort();
+
+      renderQuickFilters();
+      renderTags();
+      applyFilters();
+    }
+
+    function showLoadError(){
+      document.getElementById("status").textContent = "Could not load dataset";
+      document.getElementById("cards").innerHTML = `
+        <div class="error">
+          Could not load master_player_index.json or master_player_manifest.csv.
+          Place this HTML file in the same folder as those files.
+        </div>
+      `;
+    }
+
+    function renderQuickFilters(){
+      const box = document.getElementById("quickFilters");
+      box.innerHTML = "";
+
+      quickTags.forEach(tag => {
+        const button = document.createElement("button");
+        button.textContent = compactTag(tag);
+        button.title = tag;
+        button.onclick = () => toggleTag(tag);
+
+        if(activeTags.has(tag)){
+          button.classList.add("active");
+        }
+
+        box.appendChild(button);
+      });
+    }
+
+    function renderTags(){
+      const query = document.getElementById("tagSearch").value.toLowerCase().trim();
+      const box = document.getElementById("tags");
+      box.innerHTML = "";
+
+      allTags
+        .filter(tag => !query || tag.toLowerCase().includes(query))
+        .forEach(tag => {
+          const span = document.createElement("span");
+          span.className = "tag" + (activeTags.has(tag) ? " active" : "");
+          span.textContent = tag;
+          span.title = tag;
+          span.onclick = () => toggleTag(tag);
+          box.appendChild(span);
+        });
+    }
+
+    function toggleTag(tag){
+      if(activeTags.has(tag)){
+        activeTags.delete(tag);
+      }else{
+        activeTags.add(tag);
+      }
+
+      renderQuickFilters();
+      renderTags();
+      applyFilters();
+    }
+
+    function passNumeric(record,key,minId,maxId){
+      const min = document.getElementById(minId).value;
+      const max = document.getElementById(maxId).value;
+      const value = numberValue(metric(record,key));
+
+      if(min !== "" && value < numberValue(min)){
+        return false;
+      }
+
+      if(max !== "" && value > numberValue(max)){
+        return false;
+      }
+
+      return true;
+    }
+
+    function applyFilters(){
+      const query = document.getElementById("q").value.toLowerCase().trim();
+
+      filtered = data.filter(record => {
+        if(query){
+          const haystack = [
+            record.id,
+            record.player_name,
+            record.opponent_name,
+            record.source_workbook,
+            tagList(record).join(" "),
+            JSON.stringify(filesOf(record))
+          ].join(" ").toLowerCase();
+
+          if(!haystack.includes(query)){
+            return false;
+          }
+        }
+
+        for(const tag of activeTags){
+          if(!hasTag(record,tag)){
+            return false;
+          }
+        }
+
+        if(!passNumeric(record,"starting_price","startMin","startMax")) return false;
+        if(!passNumeric(record,"ending_price","endMin","endMax")) return false;
+        if(!passNumeric(record,"volatility_score","volMin","volMax")) return false;
+        if(!passNumeric(record,"range_points","rangeMin","rangeMax")) return false;
+        if(!passNumeric(record,"direction_flips","flipMin","flipMax")) return false;
+
+        return true;
+      });
+
+      sortFiltered();
+      render();
+    }
+
+    function sortFiltered(){
+      const key = document.getElementById("sort").value;
+      const direction = document.getElementById("dir").value;
+
+      const numeric = new Set([
+        "starting_price","ending_price","volatility_score",
+        "range_points","direction_flips","max_single_move","row_count"
+      ]);
+
+      filtered.sort((a,b) => {
+        const av = metric(a,key) || a[key] || "";
+        const bv = metric(b,key) || b[key] || "";
+
+        if(numeric.has(key)){
+          return numberValue(av) - numberValue(bv);
+        }
+
+        return String(av).localeCompare(String(bv));
+      });
+
+      if(direction === "desc"){
+        filtered.reverse();
+      }
+    }
+
+    function setSort(key){
+      document.getElementById("sort").value = key;
+      applyFilters();
+    }
+
+    function clearFilters(){
+      activeTags.clear();
+
+      [
+        "q","tagSearch","startMin","startMax","endMin","endMax",
+        "volMin","volMax","rangeMin","rangeMax","flipMin","flipMax"
+      ].forEach(id => document.getElementById(id).value = "");
+
+      renderQuickFilters();
+      renderTags();
+      applyFilters();
+    }
+
+    function render(){
+      document.getElementById("status").textContent =
+        filtered.length.toLocaleString() + " of " + data.length.toLocaleString() + " datasets";
+
+      document.getElementById("countPill").textContent =
+        filtered.length.toLocaleString() + " matching datasets";
+
+      document.getElementById("activePill").textContent =
+        activeTags.size + " active tags";
+
+      const mode = document.getElementById("view").value;
+
+      document.getElementById("cards").classList.toggle("hidden",mode !== "cards");
+      document.getElementById("tablewrap").classList.toggle("hidden",mode !== "table");
+
+      if(mode === "cards"){
+        renderCards();
+      }else{
+        renderTable();
+      }
+    }
+
+    function fileLinks(record){
+      const files = filesOf(record);
+
+      return `
+        ${files.csv ? `<a href="${encodePath(files.csv)}">CSV</a>` : ""}
+        ${files.json ? `<a href="${encodePath(files.json)}">JSON</a>` : ""}
+        ${files.npy ? `<a href="${encodePath(files.npy)}">NPY</a>` : ""}
+        ${files.png ? `<a href="${encodePath(files.png)}">PNG</a>` : ""}
+      `;
+    }
+
+    function cardBadges(record){
+      const tags = tagList(record);
+
+      const winLoss = tags.includes("winner")
+        ? "winner"
+        : tags.includes("loser")
+          ? "loser"
+          : "";
+
+      const role = [
+        "heavy_favorite","favorite","slight_favorite",
+        "slight_underdog","underdog","heavy_underdog"
+      ].find(tag => tags.includes(tag)) || "";
+
+      const sets = tags.includes("3_sets")
+        ? "3 sets"
+        : tags.includes("2_sets")
+          ? "2 sets"
+          : "";
+
+      return `
+        ${winLoss ? `<span class="badge ${winLoss === "winner" ? "win" : "loss"}">${winLoss}</span>` : ""}
+        ${role ? `<span class="badge">${compactTag(role)}</span>` : ""}
+        ${sets ? `<span class="badge">${sets}</span>` : ""}
+      `;
+    }
+
+    function renderCards(){
+      const box = document.getElementById("cards");
+      box.innerHTML = "";
+
+      filtered.slice(0,800).forEach(record => {
+        const tags = tagList(record);
+        const div = document.createElement("div");
+
+        div.className = "card";
+        div.onclick = () => openModal(record);
+
+        div.innerHTML = `
+          <div class="card-top">
+            <span class="id">${record.id || ""}</span>
+            <span class="badges">${cardBadges(record)}</span>
+          </div>
+
+          <div class="name">${record.player_name || ""}</div>
+          <div class="opp">vs ${record.opponent_name || ""}</div>
+
+          <div class="metrics">
+            <div class="metric"><b>${displayNumber(record.starting_price)}</b><span>start</span></div>
+            <div class="metric"><b>${displayNumber(record.ending_price)}</b><span>end</span></div>
+            <div class="metric"><b>${displayNumber(metric(record,"volatility_score"))}</b><span>vol</span></div>
+            <div class="metric"><b>${displayNumber(metric(record,"range_points"))}</b><span>range</span></div>
+          </div>
+
+          <div class="filelinks" onclick="event.stopPropagation()">
+            ${fileLinks(record)}
+          </div>
+
+          <div class="tagsline">
+            ${tags.slice(0,22).join(" · ")}
+          </div>
+        `;
+
+        box.appendChild(div);
+      });
+
+      if(filtered.length > 800){
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+          <b>Showing first 800 cards.</b>
+          <br>
+          <span class="small">Narrow filters to view more.</span>
+        `;
+        box.appendChild(div);
+      }
+    }
+
+    function renderTable(){
+      const tbody = document.getElementById("tbody");
+      tbody.innerHTML = "";
+
+      filtered.slice(0,1500).forEach(record => {
+        const tr = document.createElement("tr");
+        tr.onclick = () => openModal(record);
+
+        tr.innerHTML = `
+          <td>${record.id || ""}</td>
+          <td>${record.player_name || ""}</td>
+          <td>${record.opponent_name || ""}</td>
+          <td>${displayNumber(record.starting_price)}</td>
+          <td>${displayNumber(record.ending_price)}</td>
+          <td>${displayNumber(metric(record,"volatility_score"))}</td>
+          <td>${displayNumber(metric(record,"range_points"))}</td>
+          <td>${displayNumber(metric(record,"direction_flips"))}</td>
+          <td onclick="event.stopPropagation()">${fileLinks(record)}</td>
+          <td>${tagList(record).slice(0,35).join(" · ")}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function openModal(record){
+      const files = filesOf(record);
+      const tags = tagList(record);
+
+      document.getElementById("modalTitle").textContent =
+        (record.id || "") + " — " + (record.player_name || "") + " vs " + (record.opponent_name || "");
+
+      document.getElementById("modalFiles").innerHTML = fileLinks(record);
+
+      document.getElementById("modalTags").innerHTML = tags
+        .map(tag => `<span class="tag readonly">${tag}</span>`)
+        .join("");
+
+      document.getElementById("modalMeta").textContent = JSON.stringify(record,null,2);
+
+      document.getElementById("chartPreview").innerHTML = files.png
+        ? `<img src="${encodePath(files.png)}" alt="${record.id || ""}" onerror="this.outerHTML='<div class=&quot;small&quot;>PNG not found or not generated yet.</div>'">`
+        : `<div class="small">No PNG path found for this record.</div>`;
+
+      document.getElementById("csvPreview").textContent = "Loading CSV preview…";
+      document.getElementById("modal").classList.add("open");
+
+      if(files.csv){
+        try{
+          const response = await fetch(encodePath(files.csv));
+          const text = await response.text();
+
+          document.getElementById("csvPreview").textContent =
+            text.split(/\r?\n/).slice(0,18).join("\n");
+        }catch(error){
+          document.getElementById("csvPreview").textContent = "Could not load CSV preview.";
+        }
+      }else{
+        document.getElementById("csvPreview").textContent = "No CSV file path.";
+      }
+    }
+
+    function closeModal(event){
+      if(event && event.target.id !== "modal"){
+        return;
+      }
+
+      document.getElementById("modal").classList.remove("open");
+    }
+
+    loadData();
+  </script>
 </body>
 </html>
